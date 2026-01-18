@@ -287,11 +287,15 @@ def notificar_admins_push(titulo, mensaje, url=None):
     """
     from models import Usuario, SuscripcionPush
 
+    logger.info(f"[PUSH] notificar_admins_push: {titulo}")
+
     # Obtener IDs de admins activos
     admins = Usuario.query.filter_by(rol='admin', activo=True).all()
     admin_ids = [a.id for a in admins]
+    logger.info(f"[PUSH] Admins encontrados: {len(admins)} - IDs: {admin_ids}")
 
     if not admin_ids:
+        logger.warning("[PUSH] No hay admins activos")
         return {'exitos': 0, 'fallos': 0, 'mensaje': 'No hay admins activos'}
 
     # Obtener suscripciones de todos los admins
@@ -299,8 +303,10 @@ def notificar_admins_push(titulo, mensaje, url=None):
         SuscripcionPush.usuario_id.in_(admin_ids),
         SuscripcionPush.activa == True
     ).all()
+    logger.info(f"[PUSH] Suscripciones encontradas: {len(suscripciones)}")
 
     if not suscripciones:
+        logger.warning("[PUSH] Admins sin suscripciones push")
         return {'exitos': 0, 'fallos': 0, 'mensaje': 'Admins sin suscripciones push'}
 
     exitos = 0

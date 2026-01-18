@@ -80,9 +80,12 @@ def solicitar_remesa():
 
         # Enviar Push Notification a admins
         try:
-            push_nueva_solicitud_admin(nueva_remesa)
+            resultado_push = push_nueva_solicitud_admin(nueva_remesa)
+            print(f"[PUSH] Resultado solicitud: {resultado_push}")
         except Exception as e:
-            print(f"Error enviando push: {e}")
+            import traceback
+            print(f"[PUSH] Error enviando push: {e}")
+            traceback.print_exc()
 
         # Notificar al admin por WhatsApp
         admin_con_tel = Usuario.query.filter_by(rol='admin', activo=True).filter(
