@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Remesa - Revendedor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Nueva Remesa</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Tu comision:</strong> Happy Remesitas te cobra <strong>{{ comision }}%</strong> por cada remesa.
+                    </div>
+
+                    <form method="POST" id="formRemesa">
+                        <!-- Remitente -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-person"></i> Datos del Remitente</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre del Remitente *</label>
+                                <input type="text" name="remitente_nombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Telefono</label>
+                                <input type="tel" name="remitente_telefono" class="form-control" placeholder="+1...">
+                            </div>
+                        </div>
+
+                        <!-- Beneficiario -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-person-check"></i> Datos del Beneficiario (Cuba)</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre del Beneficiario *</label>
+                                <input type="text" name="beneficiario_nombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Telefono</label>
+                                <input type="tel" name="beneficiario_telefono" class="form-control" placeholder="+53...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Direccion de Entrega *</label>
+                                <textarea name="beneficiario_direccion" class="form-control" rows="2" required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Monto -->
+                        <h6 class="text-muted mb-3"><i class="bi bi-cash"></i> Monto a Enviar</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Monto (USD) *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="monto_envio" id="montoEnvio" class="form-control"
+                                           min="10" step="0.01" required oninput="calcularMonto()">
+                                    <span class="input-group-text">USD</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Entrega *</label>
+                                <select name="tipo_entrega" id="tipoEntrega" class="form-select" onchange="calcularMonto()">
+                                    <option value="MN">Moneda Nacional (CUP)</option>
+                                    <option value="USD">Dolares (USD)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Resumen -->
+                        <div id="resumenCalculo" class="card bg-light mb-4" style="display:none;">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-calculator"></i> Resumen</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p class="mb-1">Monto a enviar:</p>
+                                        <h4 id="resumenEnvio">$0 USD</h4>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-1">Beneficiario recibe:</p>
+                                        <h4 class="text-success" id="resumenEntrega">0</h4>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p class="mb-1 text-muted">Tasa aplicada:</p>
+                                        <p id="resumenTasa">1 USD = {{ tasa_actual }} CUP</p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-1">+ Comision ({{ comision }}%):</p>
+                                        <p id="resumenComision">$0</p>
+                                    </div>
+                                </div>
+                                <div class="alert alert-danger mb-0 mt-2">
+                                    <strong>Total a pagar a Happy Remesitas:</strong>
+                                    <h4 class="mb-0" id="resumenTotal">$0</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-lg"></i> Crear Remesa
+                            </button>
+                            <a href="{{ url_for('revendedor.panel') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const tasaActual = {{ tasa_actual }};
+const comisionPorcentaje = {{ comision }};
+
+function calcularMonto() {
+    const monto = parseFloat(document.getElementById('montoEnvio').value) || 0;
+    const tipo = document.getElementById('tipoEntrega').value;
+
+    if (monto <= 0) {
+        document.getElementById('resumenCalculo').style.display = 'none';
+        return;
+    }
+
+    let entrega, moneda, tasa;
+    if (tipo === 'USD') {
+        entrega = monto;
+        moneda = 'USD';
+        tasa = 1;
+    } else {
+        entrega = monto * tasaActual;
+        moneda = 'CUP';
+        tasa = tasaActual;
+    }
+
+    const comision = monto * (comisionPorcentaje / 100);
+    const total = monto + comision;
+
+    document.getElementById('resumenEnvio').textContent = '$' + monto.toFixed(2) + ' USD';
+    document.getElementById('resumenEntrega').textContent = entrega.toLocaleString() + ' ' + moneda;
+    document.getElementById('resumenTasa').textContent = '1 USD = ' + tasa + ' ' + moneda;
+    document.getElementById('resumenComision').textContent = '$' + comision.toFixed(2);
+    document.getElementById('resumenTotal').textContent = '$' + total.toFixed(2);
+    document.getElementById('resumenCalculo').style.display = 'block';
+}
+</script>
+{% endblock %}

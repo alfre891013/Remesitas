@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte por Repartidor - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-people"></i> Reporte por Repartidor</h4>
+</div>
+
+<!-- Filtro de fechas -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de repartidores -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Repartidor</th>
+                        <th>Estado</th>
+                        <th class="text-center">Total Asignadas</th>
+                        <th class="text-center">Entregadas</th>
+                        <th class="text-center">Pendientes</th>
+                        <th class="text-end">Monto Entregado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats_repartidores %}
+                    <tr>
+                        <td>
+                            <strong>{{ stat.repartidor.nombre }}</strong>
+                            <br>
+                            <small class="text-muted">@{{ stat.repartidor.username }}</small>
+                        </td>
+                        <td>
+                            {% if stat.repartidor.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary fs-6">{{ stat.total }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success fs-6">{{ stat.entregadas }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if stat.pendientes > 0 %}
+                            <span class="badge bg-warning fs-6">{{ stat.pendientes }}</span>
+                            {% else %}
+                            <span class="text-muted">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <strong>{{ "%.2f"|format(stat.monto_entregado) }} LOCAL</strong>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No hay repartidores registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Links a otros reportes -->
+<div class="d-flex gap-2 mt-4">
+    <a href="{{ url_for('reportes.balance', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline-primary">
+        <i class="bi bi-graph-up"></i> Balance General
+    </a>
+    <a href="{{ url_for('reportes.ingresos', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline-primary">
+        <i class="bi bi-cash"></i> Ingresos
+    </a>
+</div>
+{% endblock %}

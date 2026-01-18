@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Comisiones - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-percent"></i> Configuracion de Comisiones</h4>
+    <a href="{{ url_for('admin.comision_nueva') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nueva Comision
+    </a>
+</div>
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    <strong>Como funcionan las comisiones:</strong> El sistema busca la comision activa cuyo rango incluya el monto de la remesa.
+    La comision total = (monto x porcentaje%) + monto fijo
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Rango (USD)</th>
+                        <th>Porcentaje</th>
+                        <th>Monto Fijo</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comision in comisiones %}
+                    <tr>
+                        <td><strong>{{ comision.nombre }}</strong></td>
+                        <td>
+                            ${{ "%.2f"|format(comision.rango_minimo) }} -
+                            {{ "$%.2f"|format(comision.rango_maximo) if comision.rango_maximo else "Sin limite" }}
+                        </td>
+                        <td>{{ comision.porcentaje }}%</td>
+                        <td>${{ "%.2f"|format(comision.monto_fijo) }}</td>
+                        <td>
+                            {% if comision.activa %}
+                            <span class="badge bg-success">Activa</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('admin.comision_editar', id=comision.id) }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('admin.comision_eliminar', id=comision.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Eliminar esta comision?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No hay comisiones configuradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-people"></i> Usuarios
+    </a>
+    <a href="{{ url_for('admin.tasas') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-currency-exchange"></i> Tasas de Cambio
+    </a>
+</div>
+{% endblock %}

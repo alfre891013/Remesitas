@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Balance - Revendedor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-wallet2"></i> Mi Balance</h4>
+        <a href="{{ url_for('revendedor.panel') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Resumen -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Total Comisiones Generadas</h6>
+                    <h2>${{ "%.2f"|format(total_comisiones) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Total Pagado</h6>
+                    <h2>${{ "%.2f"|format(total_pagado) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Saldo Pendiente</h6>
+                    <h2>${{ "%.2f"|format(saldo_pendiente) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if saldo_pendiente > 0 %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Tienes un saldo pendiente de ${{ "%.2f"|format(saldo_pendiente) }}</strong>
+        <br>
+        <small>Contacta al administrador para registrar tu pago.</small>
+    </div>
+    {% endif %}
+
+    <!-- Historial de Pagos -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Historial de Pagos</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                            <th>Metodo</th>
+                            <th>Referencia</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in pagos %}
+                        <tr>
+                            <td>{{ pago.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td class="text-success"><strong>${{ "%.2f"|format(pago.monto) }}</strong></td>
+                            <td>{{ pago.metodo_pago or '-' }}</td>
+                            <td>{{ pago.referencia or '-' }}</td>
+                            <td>{{ pago.notas or '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No hay pagos registrados aun
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info de pago -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Como Pagar</h5>
+        </div>
+        <div class="card-body">
+            <p>Para saldar tu balance, envia el pago a:</p>
+            <ul>
+                <li><strong>Zelle:</strong> 7865359229</li>
+            </ul>
+            <p class="text-muted mb-0">
+                <small>Despues de enviar el pago, contacta al administrador para que registre tu pago en el sistema.</small>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

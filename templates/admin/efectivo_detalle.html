@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Efectivo de {{ repartidor.nombre }} - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-cash-stack"></i> Efectivo: {{ repartidor.nombre }}</h4>
+    <a href="{{ url_for('admin.efectivo') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+</div>
+
+<!-- Saldos Actuales -->
+<div class="row g-3 mb-4">
+    <div class="col-6">
+        <div class="card stat-card success h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Saldo USD</h6>
+                <h2 class="mb-0 text-success">${{ "%.2f"|format(repartidor.saldo_usd or 0) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card stat-card primary h-100">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Saldo CUP</h6>
+                <h2 class="mb-0">${{ "%.2f"|format(repartidor.saldo_cup or 0) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones -->
+<div class="row g-3 mb-4">
+    <!-- Asignar Efectivo -->
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Asignar Efectivo</h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.efectivo_asignar', id=repartidor.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Moneda</label>
+                        <select name="moneda" class="form-select" required>
+                            <option value="USD">USD</option>
+                            <option value="CUP">CUP</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Monto</label>
+                        <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas (opcional)</label>
+                        <input type="text" name="notas" class="form-control" placeholder="Ej: Entrega en mano">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-plus"></i> Asignar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Retirar Efectivo -->
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="bi bi-dash-circle"></i> Retirar Efectivo</h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.efectivo_retirar', id=repartidor.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Moneda</label>
+                        <select name="moneda" class="form-select" required>
+                            <option value="USD">USD</option>
+                            <option value="CUP">CUP</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Monto</label>
+                        <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas (opcional)</label>
+                        <input type="text" name="notas" class="form-control" placeholder="Ej: Devolucion">
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-dash"></i> Retirar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Venta de USD -->
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="bi bi-currency-exchange"></i> Venta de USD</h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.efectivo_venta_usd', id=repartidor.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Monto USD</label>
+                        <input type="number" name="monto_usd" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tasa</label>
+                        <input type="number" name="tasa" class="form-control" step="0.01" min="0.01" placeholder="Ej: 430" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <input type="text" name="notas" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-arrow-left-right"></i> Venta
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recogida -->
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-box-arrow-in-down"></i> Recogida</h6>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.efectivo_recogida', id=repartidor.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Moneda</label>
+                        <select name="moneda" class="form-select" required>
+                            <option value="USD">USD</option>
+                            <option value="CUP">CUP</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Monto</label>
+                        <input type="number" name="monto" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas</label>
+                        <input type="text" name="notas" class="form-control" placeholder="Ej: Cliente Juan">
+                    </div>
+                    <button type="submit" class="btn btn-info w-100">
+                        <i class="bi bi-plus"></i> Recogida
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de Movimientos -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Historial de Movimientos</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Moneda</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-end">Saldo Anterior</th>
+                        <th class="text-end">Saldo Nuevo</th>
+                        <th>Notas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if mov.tipo == 'asignacion' %}
+                            <span class="badge bg-success">Asignacion</span>
+                            {% elif mov.tipo == 'retiro' %}
+                            <span class="badge bg-danger">Retiro</span>
+                            {% elif mov.tipo == 'entrega' %}
+                            <span class="badge bg-info">Entrega</span>
+                            {% elif mov.tipo == 'recogida' %}
+                            <span class="badge bg-primary">Recogida</span>
+                            {% elif mov.tipo == 'venta_usd' %}
+                            <span class="badge bg-warning">Venta USD</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ mov.tipo }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.moneda }}</td>
+                        <td class="text-end">
+                            {% if mov.tipo in ['asignacion', 'recogida'] or (mov.tipo == 'venta_usd' and mov.moneda == 'CUP') %}
+                            <span class="text-success">+${{ "%.2f"|format(mov.monto) }}</span>
+                            {% else %}
+                            <span class="text-danger">-${{ "%.2f"|format(mov.monto) }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">${{ "%.2f"|format(mov.saldo_anterior) }}</td>
+                        <td class="text-end"><strong>${{ "%.2f"|format(mov.saldo_nuevo) }}</strong></td>
+                        <td>{{ mov.notas or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">Sin movimientos registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Pagos - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-cash-coin"></i> Reporte de Pagos</h4>
+</div>
+
+<!-- Filtro de fechas -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Pendiente de Cobro</h6>
+                <h2 class="text-danger">${{ "%.2f"|format(total_sin_pagar) }}</h2>
+                <small class="text-muted">{{ sin_pagar|length }} remesas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Cobrado en Periodo</h6>
+                <h2 class="text-success">${{ "%.2f"|format(total_pagado_periodo) }}</h2>
+                <small class="text-muted">{{ pagadas_periodo|length }} remesas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Cobrado Historico</h6>
+                <h2 class="text-primary">${{ "%.2f"|format(total_pagado_historico) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remesas sin pagar -->
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Remesas Pendientes de Cobro</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Remitente</th>
+                        <th>Beneficiario</th>
+                        <th>Entregada</th>
+                        <th>Monto USD</th>
+                        <th>Total a Cobrar</th>
+                        <th>Accion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remesa in sin_pagar %}
+                    <tr>
+                        <td><strong>{{ remesa.codigo }}</strong></td>
+                        <td>{{ remesa.remitente_nombre }}</td>
+                        <td>{{ remesa.beneficiario_nombre }}</td>
+                        <td>{{ remesa.fecha_entrega.strftime('%d/%m/%Y') if remesa.fecha_entrega else '-' }}</td>
+                        <td>${{ "%.2f"|format(remesa.monto_envio) }}</td>
+                        <td><strong class="text-danger">${{ "%.2f"|format(remesa.total_cobrado) }}</strong></td>
+                        <td>
+                            <form method="POST" action="{{ url_for('remesas.facturar', id=remesa.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-success" title="Marcar como pagada">
+                                    <i class="bi bi-check-lg"></i> Pagada
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-success">
+                            <i class="bi bi-check-circle"></i> No hay remesas pendientes de cobro
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if sin_pagar %}
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="5" class="text-end">Total Pendiente:</th>
+                        <th class="text-danger">${{ "%.2f"|format(total_sin_pagar) }}</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Remesas pagadas en el periodo -->
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Remesas Cobradas en el Periodo</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Remitente</th>
+                        <th>Beneficiario</th>
+                        <th>Fecha Pago</th>
+                        <th>Monto USD</th>
+                        <th>Total Cobrado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remesa in pagadas_periodo %}
+                    <tr>
+                        <td><strong>{{ remesa.codigo }}</strong></td>
+                        <td>{{ remesa.remitente_nombre }}</td>
+                        <td>{{ remesa.beneficiario_nombre }}</td>
+                        <td>{{ remesa.fecha_facturacion.strftime('%d/%m/%Y') if remesa.fecha_facturacion else '-' }}</td>
+                        <td>${{ "%.2f"|format(remesa.monto_envio) }}</td>
+                        <td><strong class="text-success">${{ "%.2f"|format(remesa.total_cobrado) }}</strong></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No hay remesas cobradas en este periodo
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if pagadas_periodo %}
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="5" class="text-end">Total Cobrado:</th>
+                        <th class="text-success">${{ "%.2f"|format(total_pagado_periodo) }}</th>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

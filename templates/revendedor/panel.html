@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Revendedor - Happy Remesitas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4><i class="bi bi-shop"></i> Panel de Revendedor</h4>
+            <p class="text-muted mb-0">Bienvenido, {{ current_user.nombre }}</p>
+        </div>
+        <a href="{{ url_for('revendedor.nueva_remesa') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-lg"></i> Nueva Remesa
+        </a>
+    </div>
+
+    <!-- Info de comision -->
+    {% if usa_logistica %}
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-truck"></i>
+        <strong>Usas logistica Happy Remesitas:</strong> Pagas el monto de la remesa + {{ comision }}% de comision.
+        <br>
+        <small>Ejemplo: En $100 USD pagas ${{ (100 + 100 * comision / 100)|round(2) }} ($100 + ${{ (100 * comision / 100)|round(2) }} comision)</small>
+    </div>
+    {% else %}
+    <div class="alert alert-success mb-4">
+        <i class="bi bi-shop"></i>
+        <strong>Solo plataforma:</strong> Usas tu propio dinero y repartidores. Solo pagas {{ comision }}% de comision.
+        <br>
+        <small>Ejemplo: En $100 USD pagas solo ${{ (100 * comision / 100)|round(2) }} de comision</small>
+    </div>
+    {% endif %}
+
+    <!-- Estadisticas -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Total Remesas</h6>
+                    <h2 class="mb-0">{{ total_remesas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Pendientes</h6>
+                    <h2 class="mb-0">{{ pendientes + en_proceso }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Entregadas</h6>
+                    <h2 class="mb-0">{{ entregadas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title opacity-75">Debes a Plataforma</h6>
+                    <h2 class="mb-0">${{ "%.2f"|format(saldo_pendiente) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen financiero -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Resumen</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        {% if usa_logistica %}
+                        <tr>
+                            <td>Total remesas:</td>
+                            <td class="text-end">${{ "%.2f"|format(total_enviado) }} USD</td>
+                        </tr>
+                        <tr>
+                            <td>+ Comision ({{ comision }}%):</td>
+                            <td class="text-end">${{ "%.2f"|format(total_comision_plataforma) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td>Comisiones ({{ comision }}%):</td>
+                            <td class="text-end">${{ "%.2f"|format(total_comision_plataforma) }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="table-danger">
+                            <td><strong>Debes a Happy Remesitas:</strong></td>
+                            <td class="text-end"><strong>${{ "%.2f"|format(saldo_pendiente) }}</strong></td>
+                        </tr>
+                    </table>
+                    <a href="{{ url_for('revendedor.balance') }}" class="btn btn-outline-primary btn-sm">
+                        Ver historial de pagos
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calculator"></i> Calculadora</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="number" id="calcMonto" class="form-control" placeholder="Monto USD" oninput="calcular()">
+                        </div>
+                        <div class="col-6">
+                            <select id="calcTipo" class="form-select" onchange="calcular()">
+                                <option value="MN">Moneda Nacional</option>
+                                <option value="USD">Dolares</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="calcResultado" class="mt-3 p-3 bg-light rounded" style="display:none;">
+                        <p class="mb-1">Beneficiario recibe: <strong id="calcEntrega">0</strong></p>
+                        <p class="mb-1">Monto remesa: <span id="calcMonto2">$0</span></p>
+                        <p class="mb-1">+ Comision ({{ comision }}%): <span id="calcComision">$0</span></p>
+                        <hr class="my-2">
+                        <p class="mb-0 text-danger"><strong>Total a pagar: <span id="calcTotal">$0</span></strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ultimas remesas -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Ultimas Remesas</h5>
+            <a href="{{ url_for('revendedor.mis_remesas') }}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Beneficiario</th>
+                            <th>Monto</th>
+                            <th>Comision</th>
+                            <th>Total a Pagar</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for remesa in ultimas_remesas %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('revendedor.detalle_remesa', id=remesa.id) }}">
+                                    {{ remesa.codigo }}
+                                </a>
+                            </td>
+                            <td>{{ remesa.beneficiario_nombre }}</td>
+                            <td>${{ "%.2f"|format(remesa.monto_envio) }}</td>
+                            <td>${{ "%.2f"|format(remesa.comision_plataforma) }}</td>
+                            <td class="text-danger"><strong>${{ "%.2f"|format(remesa.monto_envio + remesa.comision_plataforma) }}</strong></td>
+                            <td>
+                                <span class="badge badge-{{ remesa.estado }}">{{ remesa.estado|capitalize }}</span>
+                            </td>
+                            <td>{{ remesa.fecha_creacion.strftime('%d/%m %H:%M') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No tienes remesas aun. <a href="{{ url_for('revendedor.nueva_remesa') }}">Crea la primera</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calcular() {
+    const monto = parseFloat(document.getElementById('calcMonto').value) || 0;
+    const tipo = document.getElementById('calcTipo').value;
+
+    if (monto <= 0) {
+        document.getElementById('calcResultado').style.display = 'none';
+        return;
+    }
+
+    fetch('{{ url_for("revendedor.api_calcular") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({monto: monto, tipo: tipo})
+    })
+    .then(r => r.json())
+    .then(data => {
+        const montoVal = parseFloat(document.getElementById('calcMonto').value);
+        const total = montoVal + data.comision_plataforma;
+        document.getElementById('calcEntrega').textContent =
+            data.monto_entrega.toLocaleString() + ' ' + data.moneda;
+        document.getElementById('calcMonto2').textContent = '$' + montoVal.toFixed(2);
+        document.getElementById('calcComision').textContent = '$' + data.comision_plataforma.toFixed(2);
+        document.getElementById('calcTotal').textContent = '$' + total.toFixed(2);
+        document.getElementById('calcResultado').style.display = 'block';
+    });
+}
+</script>
+{% endblock %}

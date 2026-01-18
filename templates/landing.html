@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Happy Remesitas - Envía dinero a Cuba de forma rápida y segura. Las mejores tasas del mercado, entrega en 24 horas.">
+    <meta name="keywords" content="remesas cuba, enviar dinero cuba, remesas usa cuba, dolares cuba">
+    <meta property="og:title" content="Happy Remesitas - Envíos rápidos a Cuba">
+    <meta property="og:description" content="Envía dinero a Cuba con las mejores tasas. Entrega en 24 horas.">
+    <meta property="og:type" content="website">
+    <title>Happy Remesitas - Envíos Rápidos y Seguros a Cuba</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --primary-light: #34D399;
+            --accent: #F59E0B;
+            --accent-dark: #D97706;
+            --dark: #1F2937;
+            --gray: #6B7280;
+            --light: #F3F4F6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; color: var(--dark); }
+
+        /* Navbar */
+        .navbar-landing {
+            background: white;
+            padding: 16px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .navbar-landing .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .navbar-landing .logo img { width: 45px; height: 45px; border-radius: 12px; }
+        .navbar-landing .logo span { font-weight: 800; font-size: 1.3rem; color: var(--dark); }
+        .navbar-landing .btn-login {
+            background: var(--primary); color: white; padding: 10px 24px;
+            border-radius: 10px; text-decoration: none; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .navbar-landing .btn-login:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #10B981 0%, #047857 50%, #059669 100%);
+            padding: 160px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+        }
+        .hero p { font-size: 1.25rem; color: rgba(255,255,255,0.9); margin-bottom: 30px; max-width: 500px; }
+        .hero .btn-cta {
+            background: var(--accent);
+            color: white;
+            padding: 18px 40px;
+            border-radius: 14px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+        }
+        .hero .btn-cta:hover {
+            background: var(--accent-dark);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(245, 158, 11, 0.4);
+        }
+        .hero-image { text-align: center; }
+        .hero-image img { max-width: 350px; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.2)); }
+
+        /* Tasa Box */
+        .tasa-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            margin-top: -60px;
+            position: relative;
+            z-index: 10;
+        }
+        .tasa-box .label { color: var(--gray); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .tasa-box .valor { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
+        .tasa-box .moneda { color: var(--dark); font-weight: 600; }
+
+        /* Features */
+        .features { padding: 100px 0; background: var(--light); }
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+        .feature-card .icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 2rem;
+            color: white;
+        }
+        .feature-card h3 { font-weight: 700; margin-bottom: 12px; }
+        .feature-card p { color: var(--gray); line-height: 1.6; }
+
+        /* How it works */
+        .how-it-works { padding: 100px 0; }
+        .section-title { font-size: 2.5rem; font-weight: 800; text-align: center; margin-bottom: 60px; letter-spacing: -1px; }
+        .step {
+            text-align: center;
+            padding: 20px;
+        }
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 auto 20px;
+        }
+        .step h4 { font-weight: 700; margin-bottom: 10px; }
+        .step p { color: var(--gray); }
+        .step-arrow { color: var(--primary); font-size: 2rem; display: flex; align-items: center; justify-content: center; }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--dark) 0%, #111827 100%);
+            padding: 80px 0;
+            text-align: center;
+        }
+        .cta-section h2 { color: white; font-size: 2.5rem; font-weight: 800; margin-bottom: 20px; }
+        .cta-section p { color: rgba(255,255,255,0.7); font-size: 1.1rem; margin-bottom: 30px; }
+        .cta-section .btn-cta {
+            background: var(--primary);
+            color: white;
+            padding: 18px 50px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .cta-section .btn-cta:hover { background: var(--primary-light); transform: translateY(-3px); }
+
+        /* Footer */
+        .footer {
+            background: #111827;
+            padding: 60px 0 30px;
+            color: rgba(255,255,255,0.7);
+        }
+        .footer h5 { color: white; font-weight: 700; margin-bottom: 20px; }
+        .footer a { color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.2s; }
+        .footer a:hover { color: var(--primary); }
+        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; margin-top: 40px; }
+
+        /* Access buttons */
+        .access-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+        .access-buttons a {
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .btn-cliente { background: white; color: var(--primary); }
+        .btn-cliente:hover { background: var(--light); }
+        .btn-revendedor { background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.3); }
+        .btn-revendedor:hover { background: rgba(255,255,255,0.25); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero { padding: 120px 0 60px; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero p { font-size: 1rem; }
+            .hero-image { display: none; }
+            .tasa-box { padding: 20px; margin: -40px 15px 0; }
+            .tasa-box .valor { font-size: 1.8rem; }
+            .section-title { font-size: 1.8rem; }
+            .step-arrow { transform: rotate(90deg); margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar-landing">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="/" class="logo">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Happy Remesitas">
+                    <span>Happy Remesitas</span>
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn-login">
+                    <i class="bi bi-person-fill me-1"></i> Acceder
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content">
+                    <h1>Envía dinero a Cuba de forma rápida y segura</h1>
+                    <p>Las mejores tasas del mercado, entrega garantizada en 24 horas y notificaciones en tiempo real por WhatsApp.</p>
+                    <a href="{{ url_for('publico.solicitar_remesa') }}" class="btn-cta">
+                        <i class="bi bi-send-fill"></i> Enviar Remesa Ahora
+                    </a>
+                    <div class="access-buttons">
+                        <a href="{{ url_for('publico.solicitar_remesa') }}" class="btn-cliente"><i class="bi bi-person me-1"></i> Soy Cliente</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn-revendedor"><i class="bi bi-shop me-1"></i> Soy Revendedor</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 hero-image">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Happy Remesitas">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tasa Box -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="tasa-box">
+                    <div class="row align-items-center text-center">
+                        <div class="col-md-4">
+                            <div class="label">Tasa del día</div>
+                            <div class="valor">{{ tasa_actual }}</div>
+                            <div class="moneda">CUP por USD</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="label">Entrega en</div>
+                            <div class="valor" style="color: var(--accent);">24h</div>
+                            <div class="moneda">o menos</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="label">Comisión desde</div>
+                            <div class="valor" style="color: var(--dark);">5%</div>
+                            <div class="moneda">transparente</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">¿Por qué elegirnos?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="icon"><i class="bi bi-lightning-fill"></i></div>
+                        <h3>Rápido</h3>
+                        <p>Tu dinero llega en menos de 24 horas a cualquier parte de Cuba.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="icon"><i class="bi bi-shield-check"></i></div>
+                        <h3>Seguro</h3>
+                        <p>Confirmación de entrega con foto y notificación instantánea por WhatsApp.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="icon"><i class="bi bi-currency-dollar"></i></div>
+                        <h3>Mejor Tasa</h3>
+                        <p>Tasas competitivas actualizadas diariamente. Sin costos ocultos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">¿Cómo funciona?</h2>
+            <div class="row align-items-center">
+                <div class="col-md-3 col-6">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h4>Solicita</h4>
+                        <p>Llena el formulario con los datos del beneficiario</p>
+                    </div>
+                </div>
+                <div class="col-md-1 d-none d-md-block">
+                    <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h4>Paga</h4>
+                        <p>Envía el pago por Zelle a nuestro correo</p>
+                    </div>
+                </div>
+                <div class="col-md-1 d-none d-md-block">
+                    <div class="step-arrow"><i class="bi bi-arrow-right"></i></div>
+                </div>
+                <div class="col-md-3 col-6 mx-auto">
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h4>¡Listo!</h4>
+                        <p>Tu familia recibe el dinero en menos de 24 horas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>¿Listo para enviar?</h2>
+            <p>Tu familia te lo agradecerá. Envío rápido, seguro y con las mejores tasas.</p>
+            <a href="{{ url_for('publico.solicitar_remesa') }}" class="btn-cta">
+                <i class="bi bi-send-fill"></i> Enviar Remesa Ahora
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width: 40px; border-radius: 10px;">
+                        <span style="color: white; font-weight: 700; font-size: 1.2rem;">Happy Remesitas</span>
+                    </div>
+                    <p>Envíos rápidos y seguros a Cuba desde Estados Unidos.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Enlaces</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('publico.solicitar_remesa') }}"><i class="bi bi-send me-2"></i>Enviar Remesa</a></li>
+                        <li class="mb-2"><a href="/mis-remesas"><i class="bi bi-clock-history me-2"></i>Mis Remesas</a></li>
+                        <li class="mb-2"><a href="/seguimiento"><i class="bi bi-search me-2"></i>Rastrear Envío</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5>Contacto</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="bi bi-envelope me-2"></i>7865359229</li>
+                        <li class="mb-2"><i class="bi bi-whatsapp me-2"></i>WhatsApp disponible</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom text-center">
+                <p class="mb-0">&copy; 2024 Happy Remesitas. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

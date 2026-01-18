@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Control de Efectivo - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-cash-stack"></i> Control de Efectivo</h4>
+</div>
+
+<!-- Resumen Total -->
+<div class="row g-3 mb-4">
+    <div class="col-6">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total USD en Repartidores</h6>
+                <h3 class="mb-0 text-success">${{ "%.2f"|format(total_usd) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total CUP en Repartidores</h6>
+                <h3 class="mb-0">${{ "%.2f"|format(total_cup) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Repartidores -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Efectivo por Repartidor</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Repartidor</th>
+                        <th>WhatsApp</th>
+                        <th class="text-end">Saldo USD</th>
+                        <th class="text-end">Saldo CUP</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for repartidor in repartidores %}
+                    <tr>
+                        <td><strong>{{ repartidor.nombre }}</strong></td>
+                        <td>
+                            {% if repartidor.telefono %}
+                            <span class="text-success"><i class="bi bi-whatsapp"></i> {{ repartidor.telefono }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <span class="badge bg-success fs-6">${{ "%.2f"|format(repartidor.saldo_usd or 0) }}</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="badge bg-primary fs-6">${{ "%.2f"|format(repartidor.saldo_cup or 0) }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin.efectivo_repartidor', id=repartidor.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver / Gestionar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No hay repartidores activos
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a Usuarios
+    </a>
+</div>
+{% endblock %}

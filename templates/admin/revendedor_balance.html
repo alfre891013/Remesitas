@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Balance {{ revendedor.nombre }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4><i class="bi bi-wallet2"></i> Balance: {{ revendedor.nombre }}</h4>
+            <p class="text-muted mb-0">Comision: {{ revendedor.comision_revendedor }}%</p>
+        </div>
+        <a href="{{ url_for('admin.revendedores') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Resumen -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Total Comisiones</h6>
+                    <h2>${{ "%.2f"|format(total_comisiones) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Total Pagado</h6>
+                    <h2>${{ "%.2f"|format(total_pagado) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Saldo Pendiente</h6>
+                    <h2>${{ "%.2f"|format(revendedor.saldo_pendiente) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="opacity-75">Total Remesas</h6>
+                    <h2>{{ remesas|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Registrar Pago -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Registrar Pago</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.revendedor_registrar_pago', id=revendedor.id) }}">
+                        <div class="mb-3">
+                            <label class="form-label">Monto *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="monto" class="form-control"
+                                       step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Metodo de Pago</label>
+                            <select name="metodo_pago" class="form-select">
+                                <option value="Zelle">Zelle</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Transferencia">Transferencia</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Referencia</label>
+                            <input type="text" name="referencia" class="form-control"
+                                   placeholder="# confirmacion">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notas</label>
+                            <textarea name="notas" class="form-control" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-lg"></i> Registrar Pago
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Pagos -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Historial de Pagos</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Monto</th>
+                                <th>Metodo</th>
+                                <th>Referencia</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pago in pagos %}
+                            <tr>
+                                <td>{{ pago.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td class="text-success"><strong>${{ "%.2f"|format(pago.monto) }}</strong></td>
+                                <td>{{ pago.metodo_pago or '-' }}</td>
+                                <td>{{ pago.referencia or '-' }}</td>
+                                <td>{{ pago.notas or '-' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    No hay pagos registrados
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ultimas Remesas -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-list-ul"></i> Ultimas Remesas</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Beneficiario</th>
+                        <th>Monto USD</th>
+                        <th>Comision</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remesa in remesas %}
+                    <tr>
+                        <td>{{ remesa.codigo }}</td>
+                        <td>{{ remesa.beneficiario_nombre }}</td>
+                        <td>${{ "%.2f"|format(remesa.monto_envio) }}</td>
+                        <td class="text-danger">${{ "%.2f"|format(remesa.comision_plataforma) }}</td>
+                        <td><span class="badge badge-{{ remesa.estado }}">{{ remesa.estado|capitalize }}</span></td>
+                        <td>{{ remesa.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            No hay remesas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

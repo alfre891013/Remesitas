@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ remesa.codigo }} - Revendedor{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-0">{{ remesa.codigo }}</h4>
+                    <span class="badge badge-{{ remesa.estado }} fs-6">{{ remesa.estado|capitalize }}</span>
+                </div>
+                <a href="{{ url_for('revendedor.mis_remesas') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <!-- Info Principal -->
+            <div class="row g-4">
+                <!-- Remitente -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-person"></i> Remitente</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1"><strong>{{ remesa.remitente_nombre }}</strong></p>
+                            {% if remesa.remitente_telefono %}
+                            <p class="mb-0 text-muted">
+                                <i class="bi bi-telephone"></i> {{ remesa.remitente_telefono }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beneficiario -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-person-check"></i> Beneficiario</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1"><strong>{{ remesa.beneficiario_nombre }}</strong></p>
+                            {% if remesa.beneficiario_telefono %}
+                            <p class="mb-1 text-muted">
+                                <i class="bi bi-telephone"></i> {{ remesa.beneficiario_telefono }}
+                            </p>
+                            {% endif %}
+                            <p class="mb-0 text-muted">
+                                <i class="bi bi-geo-alt"></i> {{ remesa.beneficiario_direccion }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Montos -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-cash-stack"></i> Detalles del Envio</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <p class="text-muted mb-1">Monto Enviado</p>
+                            <h3 class="text-primary">${{ "%.2f"|format(remesa.monto_envio) }}</h3>
+                            <small class="text-muted">USD</small>
+                        </div>
+                        <div class="col-4">
+                            <p class="text-muted mb-1">Tasa Aplicada</p>
+                            <h3>{{ remesa.tasa_cambio }}</h3>
+                            <small class="text-muted">{{ remesa.moneda_entrega }}/USD</small>
+                        </div>
+                        <div class="col-4">
+                            <p class="text-muted mb-1">Beneficiario Recibe</p>
+                            <h3 class="text-success">{{ "{:,.0f}"|format(remesa.monto_entrega) }}</h3>
+                            <small class="text-muted">{{ remesa.moneda_entrega }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comision -->
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="bi bi-percent"></i> Tu Comision</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <p class="mb-0">Comision de plataforma por esta remesa:</p>
+                            <small class="text-muted">Este monto se suma a tu saldo pendiente</small>
+                        </div>
+                        <div class="col-4 text-end">
+                            <h3 class="text-danger mb-0">${{ "%.2f"|format(remesa.comision_plataforma) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado y Fechas -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Historial</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>Creada:</strong> {{ remesa.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                        </li>
+                        {% if remesa.repartidor %}
+                        <li class="mb-2">
+                            <i class="bi bi-person-badge text-info"></i>
+                            <strong>Repartidor:</strong> {{ remesa.repartidor.nombre }}
+                        </li>
+                        {% endif %}
+                        {% if remesa.fecha_entrega %}
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <strong>Entregada:</strong> {{ remesa.fecha_entrega.strftime('%d/%m/%Y %H:%M') }}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Foto de entrega -->
+            {% if remesa.foto_entrega %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-camera"></i> Foto de Entrega</h6>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='uploads/' + remesa.foto_entrega) }}"
+                         class="img-fluid rounded" alt="Foto de entrega" style="max-height: 400px;">
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Acciones -->
+            <div class="d-flex gap-2 mt-4">
+                <a href="{{ url_for('revendedor.panel') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-house"></i> Panel
+                </a>
+                <a href="{{ url_for('revendedor.nueva_remesa') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Nueva Remesa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

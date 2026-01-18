@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Remesas - Revendedor{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-list-ul"></i> Mis Remesas</h4>
+        <a href="{{ url_for('revendedor.nueva_remesa') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nueva Remesa
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('revendedor.mis_remesas') }}"
+                   class="btn btn-sm {{ 'btn-primary' if not estado_filtro else 'btn-outline-secondary' }}">
+                    Todas
+                </a>
+                <a href="{{ url_for('revendedor.mis_remesas', estado='pendiente') }}"
+                   class="btn btn-sm {{ 'btn-warning' if estado_filtro == 'pendiente' else 'btn-outline-warning' }}">
+                    Pendientes
+                </a>
+                <a href="{{ url_for('revendedor.mis_remesas', estado='en_proceso') }}"
+                   class="btn btn-sm {{ 'btn-info' if estado_filtro == 'en_proceso' else 'btn-outline-info' }}">
+                    En Proceso
+                </a>
+                <a href="{{ url_for('revendedor.mis_remesas', estado='entregada') }}"
+                   class="btn btn-sm {{ 'btn-success' if estado_filtro == 'entregada' else 'btn-outline-success' }}">
+                    Entregadas
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Beneficiario</th>
+                        <th>Direccion</th>
+                        <th>Monto USD</th>
+                        <th>Entrega</th>
+                        <th>Comision</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remesa in remesas %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('revendedor.detalle_remesa', id=remesa.id) }}">
+                                {{ remesa.codigo }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ remesa.beneficiario_nombre }}
+                            {% if remesa.beneficiario_telefono %}
+                            <br><small class="text-muted">{{ remesa.beneficiario_telefono }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ remesa.beneficiario_direccion[:40] }}{% if remesa.beneficiario_direccion|length > 40 %}...{% endif %}</small>
+                        </td>
+                        <td><strong>${{ "%.2f"|format(remesa.monto_envio) }}</strong></td>
+                        <td>{{ "{:,.0f}"|format(remesa.monto_entrega) }} {{ remesa.moneda_entrega }}</td>
+                        <td class="text-danger">${{ "%.2f"|format(remesa.comision_plataforma) }}</td>
+                        <td>
+                            <span class="badge badge-{{ remesa.estado }}">{{ remesa.estado|capitalize }}</span>
+                        </td>
+                        <td>{{ remesa.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <a href="{{ url_for('revendedor.detalle_remesa', id=remesa.id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            {% if estado_filtro %}
+                            No tienes remesas con estado "{{ estado_filtro }}"
+                            {% else %}
+                            No tienes remesas aun. <a href="{{ url_for('revendedor.nueva_remesa') }}">Crea la primera</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    {% if remesas %}
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Remesas</h6>
+                    <h3>{{ remesas|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Enviado</h6>
+                    <h3>${{ "%.2f"|format(remesas|sum(attribute='monto_envio')) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Comisiones</h6>
+                    <h3 class="text-danger">${{ "%.2f"|format(remesas|sum(attribute='comision_plataforma')) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

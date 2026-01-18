@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Ingresos - Reportes - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-cash"></i> Movimientos Contables</h4>
+</div>
+
+<!-- Filtro de fechas -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Ingresos</h6>
+                <h3 class="mb-0 text-success">${{ "%.2f"|format(total_ingresos) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card danger h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Egresos</h6>
+                <h3 class="mb-0 text-danger">${{ "%.2f"|format(total_egresos) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Balance</h6>
+                <h3 class="mb-0 {{ 'text-success' if balance >= 0 else 'text-danger' }}">
+                    ${{ "%.2f"|format(balance) }}
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de movimientos -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Detalle de Movimientos</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Remesa</th>
+                        <th class="text-end">Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if mov.tipo == 'ingreso' %}
+                            <span class="badge bg-success">Ingreso</span>
+                            {% else %}
+                            <span class="badge bg-danger">Egreso</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mov.concepto }}</td>
+                        <td>
+                            {% if mov.remesa %}
+                            <a href="{{ url_for('remesas.detalle', id=mov.remesa_id) }}">
+                                {{ mov.remesa.codigo }}
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="text-end {{ 'text-success' if mov.tipo == 'ingreso' else 'text-danger' }}">
+                            {{ '+' if mov.tipo == 'ingreso' else '-' }}${{ "%.2f"|format(mov.monto) }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            No hay movimientos en este periodo
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Links a otros reportes -->
+<div class="d-flex gap-2 mt-4">
+    <a href="{{ url_for('reportes.balance', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline-primary">
+        <i class="bi bi-graph-up"></i> Balance General
+    </a>
+    <a href="{{ url_for('reportes.por_repartidor', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline-primary">
+        <i class="bi bi-people"></i> Por Repartidor
+    </a>
+</div>
+{% endblock %}

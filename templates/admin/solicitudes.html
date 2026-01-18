@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitudes Pendientes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-inbox"></i> Solicitudes de Clientes</h2>
+        <span class="badge bg-warning fs-5">{{ solicitudes|length }} pendientes</span>
+    </div>
+
+    {% if solicitudes %}
+    <div class="row">
+        {% for s in solicitudes %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card border-warning h-100">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between">
+                    <strong>{{ s.codigo }}</strong>
+                    <small>{{ s.fecha_creacion.strftime('%d/%m %H:%M') }}</small>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>Remitente:</strong> {{ s.remitente_nombre }}<br>
+                        <small class="text-muted">{{ s.remitente_telefono or 'Sin telefono' }}</small>
+                    </p>
+                    <hr class="my-2">
+                    <p class="mb-1">
+                        <strong>Beneficiario:</strong> {{ s.beneficiario_nombre }}<br>
+                        <small class="text-muted">{{ s.beneficiario_direccion or 'Sin direccion' }}</small>
+                    </p>
+                    <hr class="my-2">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small class="text-muted">Envia</small>
+                            <h5 class="mb-0 text-primary">${{ "%.2f"|format(s.monto_envio) }} USD</h5>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Recibe</small>
+                            <h5 class="mb-0 text-success">
+                                {% if s.moneda_entrega == 'USD' %}
+                                    ${{ "%.2f"|format(s.monto_entrega) }} USD
+                                {% else %}
+                                    {{ "{:,.0f}".format(s.monto_entrega) }} CUP
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span class="badge bg-{% if s.tipo_entrega == 'USD' %}success{% else %}info{% endif %}">
+                            {{ s.tipo_entrega }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.solicitud_detalle', id=s.id) }}" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-edit"></i> Ver / Aprobar
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-inbox fa-3x mb-3"></i>
+        <h4>No hay solicitudes pendientes</h4>
+        <p>Las solicitudes de clientes apareceran aqui</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

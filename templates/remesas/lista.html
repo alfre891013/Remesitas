@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Remesas - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-send"></i> Remesas</h4>
+    <div class="d-flex gap-2 align-items-center">
+        <!-- Campana de alertas -->
+        {% if alertas.total > 0 %}
+        <div class="dropdown">
+            <button class="btn btn-outline-danger position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-bell-fill"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ alertas.total }}
+                </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" style="min-width: 280px;">
+                <li><h6 class="dropdown-header"><i class="bi bi-exclamation-triangle"></i> Alertas</h6></li>
+                {% if alertas.sin_pagar > 0 %}
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center" href="?facturada=no&estado=entregada">
+                        <span><i class="bi bi-cash text-warning"></i> Entregadas sin pagar</span>
+                        <span class="badge bg-warning text-dark">{{ alertas.sin_pagar }}</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if alertas.sin_entregar_24h > 0 %}
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center" href="?estado=en_proceso">
+                        <span><i class="bi bi-clock-history text-danger"></i> +24h sin entregar</span>
+                        <span class="badge bg-danger">{{ alertas.sin_entregar_24h }}</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if alertas.sin_repartidor > 0 %}
+                <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center" href="?estado=pendiente">
+                        <span><i class="bi bi-person-x text-secondary"></i> Sin repartidor</span>
+                        <span class="badge bg-secondary">{{ alertas.sin_repartidor }}</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% else %}
+        <button class="btn btn-outline-secondary" type="button" disabled>
+            <i class="bi bi-bell"></i>
+        </button>
+        {% endif %}
+        <a href="{{ url_for('remesas.nueva') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nueva Remesa
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="buscar" class="form-control" placeholder="Buscar..." value="{{ buscar }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    <option value="pendiente" {% if estado_filtro == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                    <option value="en_proceso" {% if estado_filtro == 'en_proceso' %}selected{% endif %}>En proceso</option>
+                    <option value="entregada" {% if estado_filtro == 'entregada' %}selected{% endif %}>Entregada</option>
+                    <option value="cancelada" {% if estado_filtro == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="facturada" class="form-select">
+                    <option value="">Todas (pagadas y no)</option>
+                    <option value="si" {% if facturada_filtro == 'si' %}selected{% endif %}>Pagadas</option>
+                    <option value="no" {% if facturada_filtro == 'no' %}selected{% endif %}>Sin pagar</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de remesas -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Remitente</th>
+                        <th>Beneficiario</th>
+                        <th>Monto USD</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Pagada</th>
+                        <th>Repartidor</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remesa in remesas %}
+                    <tr class="{{ 'table-success' if remesa.facturada else '' }}">
+                        <td>
+                            <a href="{{ url_for('remesas.detalle', id=remesa.id) }}">
+                                <strong>{{ remesa.codigo }}</strong>
+                            </a>
+                        </td>
+                        <td>{{ remesa.remitente_nombre }}</td>
+                        <td>{{ remesa.beneficiario_nombre }}</td>
+                        <td>${{ "%.2f"|format(remesa.monto_envio) }}</td>
+                        <td><strong>${{ "%.2f"|format(remesa.total_cobrado) }}</strong></td>
+                        <td>
+                            <span class="badge badge-{{ remesa.estado }}">{{ remesa.estado|capitalize }}</span>
+                        </td>
+                        <td>
+                            {% if remesa.facturada %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> Si</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if remesa.repartidor %}
+                                {{ remesa.repartidor.nombre }}
+                            {% else %}
+                                <span class="text-muted">Sin asignar</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('remesas.detalle', id=remesa.id) }}" class="btn btn-outline-primary" title="Ver">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if remesa.beneficiario_telefono %}
+                                <a href="https://wa.me/{{ remesa.beneficiario_telefono|replace('+','')|replace(' ','') }}"
+                                   target="_blank" class="btn btn-outline-success" title="WhatsApp Beneficiario">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('remesas.editar', id=remesa.id) }}" class="btn btn-outline-secondary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not remesa.facturada %}
+                                <form method="POST" action="{{ url_for('remesas.facturar', id=remesa.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-outline-success" title="Marcar como pagada">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('remesas.desfacturar', id=remesa.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-success" title="Quitar marca de pagada">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('remesas.nueva', repetir=remesa.id) }}" class="btn btn-outline-info" title="Repetir remesa">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </a>
+                                {% if remesa.estado in ['pendiente', 'en_proceso'] %}
+                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#asignarModal{{ remesa.id }}" title="Asignar">
+                                    <i class="bi bi-person-plus"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal asignar -->
+                    <div class="modal fade" id="asignarModal{{ remesa.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('remesas.asignar', id=remesa.id) }}">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Asignar Repartidor</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Remesa: <strong>{{ remesa.codigo }}</strong></p>
+                                        <p>Beneficiario: {{ remesa.beneficiario_nombre }}</p>
+                                        <div class="mb-3">
+                                            <label class="form-label">Seleccionar Repartidor</label>
+                                            <select name="repartidor_id" class="form-select" required>
+                                                <option value="">-- Seleccionar --</option>
+                                                {% for r in repartidores %}
+                                                <option value="{{ r.id }}" {% if remesa.repartidor_id == r.id %}selected{% endif %}>
+                                                    {{ r.nombre }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary">Asignar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            No se encontraron remesas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

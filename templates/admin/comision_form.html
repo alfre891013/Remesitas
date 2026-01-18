@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if comision else 'Nueva' }} Comision - Remesitas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-percent"></i>
+                    {{ 'Editar' if comision else 'Nueva' }} Comision
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" name="nombre" class="form-control"
+                               value="{{ comision.nombre if comision else '' }}"
+                               placeholder="Ej: Comision estandar" required>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Rango Minimo (USD) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="rango_minimo" class="form-control"
+                                       value="{{ comision.rango_minimo if comision else 0 }}"
+                                       step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Rango Maximo (USD)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="rango_maximo" class="form-control"
+                                       value="{{ comision.rango_maximo if comision and comision.rango_maximo else '' }}"
+                                       step="0.01" min="0" placeholder="Sin limite">
+                            </div>
+                            <small class="text-muted">Dejar vacio para sin limite</small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Porcentaje *</label>
+                            <div class="input-group">
+                                <input type="number" name="porcentaje" class="form-control"
+                                       value="{{ comision.porcentaje if comision else 0 }}"
+                                       step="0.01" min="0" required>
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Monto Fijo *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="monto_fijo" class="form-control"
+                                       value="{{ comision.monto_fijo if comision else 0 }}"
+                                       step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="activa" class="form-check-input" id="activa"
+                                   {{ 'checked' if not comision or comision.activa else '' }}>
+                            <label class="form-check-label" for="activa">Comision activa</label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-secondary">
+                        <strong>Formula:</strong> Comision Total = (Monto x Porcentaje%) + Monto Fijo
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> {{ 'Guardar Cambios' if comision else 'Crear Comision' }}
+                        </button>
+                        <a href="{{ url_for('admin.comisiones') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

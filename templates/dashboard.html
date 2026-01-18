@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Happy Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="text-marron"><i class="bi bi-speedometer2"></i> Dashboard</h4>
+    <a href="{{ url_for('remesas.nueva') }}" class="btn btn-cta">
+        <i class="bi bi-plus-lg"></i> Nueva Remesa
+    </a>
+</div>
+
+<!-- Estadisticas -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Remesas Hoy</h6>
+                        <h3 class="mb-0">{{ remesas_hoy }}</h3>
+                    </div>
+                    <div class="text-primary">
+                        <i class="bi bi-calendar-day" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Pendientes</h6>
+                        <h3 class="mb-0">{{ remesas_pendientes }}</h3>
+                    </div>
+                    <div class="text-dorado">
+                        <i class="bi bi-clock-fill" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Ingresos Mes</h6>
+                        <h3 class="mb-0">${{ "%.2f"|format(ingresos_mes) }}</h3>
+                    </div>
+                    <div class="text-verde">
+                        <i class="bi bi-cash-stack" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Movido Hoy</h6>
+                        <h3 class="mb-0">${{ "%.2f"|format(total_movido_hoy) }}</h3>
+                    </div>
+                    <div class="text-danger">
+                        <i class="bi bi-arrow-left-right" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas y Pagos -->
+<div class="row g-3 mb-4">
+    <!-- Alertas -->
+    {% if alertas.sin_pagar > 0 or alertas.sin_entregar_24h > 0 %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger">
+                <h6 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Alertas Importantes</h6>
+            </div>
+            <div class="card-body">
+                {% if alertas.sin_pagar > 0 %}
+                <a href="{{ url_for('remesas.lista') }}?facturada=no&estado=entregada" class="d-flex justify-content-between align-items-center text-decoration-none text-dark mb-2 p-2 rounded hover-verde">
+                    <span><i class="bi bi-cash text-warning me-2"></i> Remesas entregadas sin pagar</span>
+                    <span class="badge bg-warning text-dark">{{ alertas.sin_pagar }}</span>
+                </a>
+                {% endif %}
+                {% if alertas.sin_entregar_24h > 0 %}
+                <a href="{{ url_for('remesas.lista') }}?estado=en_proceso" class="d-flex justify-content-between align-items-center text-decoration-none text-dark p-2 rounded hover-verde">
+                    <span><i class="bi bi-clock-history text-danger me-2"></i> Mas de 24h sin entregar</span>
+                    <span class="badge bg-danger">{{ alertas.sin_entregar_24h }}</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Estadisticas de Pagos -->
+    <div class="col-md-{% if alertas.sin_pagar > 0 or alertas.sin_entregar_24h > 0 %}6{% else %}12{% endif %}">
+        <div class="card">
+            <div class="card-header bg-success">
+                <h6 class="mb-0"><i class="bi bi-cash-coin"></i> Estado de Pagos</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-danger mb-0">${{ "%.2f"|format(monto_sin_pagar) }}</h4>
+                            <small class="text-muted">Pendiente de cobro ({{ remesas_sin_pagar }} remesas)</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success mb-0">${{ "%.2f"|format(monto_pagado_mes) }}</h4>
+                        <small class="text-muted">Cobrado este mes ({{ remesas_pagadas_mes }} remesas)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Solicitudes Pendientes -->
+{% if solicitudes_pendientes %}
+<div class="card mb-4 border-info">
+    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0"><i class="bi bi-bell-fill"></i> Solicitudes Pendientes de Aprobacion</h6>
+        <span class="badge bg-white text-info">{{ solicitudes_pendientes|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Remitente</th>
+                        <th>Beneficiario</th>
+                        <th>Monto</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sol in solicitudes_pendientes %}
+                    <tr>
+                        <td><strong>{{ sol.codigo }}</strong></td>
+                        <td>
+                            {{ sol.remitente_nombre }}
+                            {% if sol.remitente_telefono %}
+                            <br><small class="text-muted">{{ sol.remitente_telefono }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ sol.beneficiario_nombre }}</td>
+                        <td>${{ "%.2f"|format(sol.monto_envio) }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('admin.solicitud_detalle', id=sol.id) }}" class="btn btn-success" title="Aprobar">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="{{ url_for('remesas.detalle', id=sol.id) }}" class="btn btn-primary" title="Ver detalles">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if sol.link_whatsapp_remitente %}
+                                <a href="{{ sol.link_whatsapp_remitente }}" target="_blank" class="btn btn-success" title="WhatsApp Remitente">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Info de tasa -->
+<div class="alert alert-info d-flex align-items-center mb-4">
+    <i class="bi bi-currency-exchange me-2" style="font-size: 1.3rem;"></i>
+    <span>Tasa de cambio actual: <strong>1 USD = {{ tasa_actual }} CUP</strong></span>
+    <a href="{{ url_for('admin.tasas') }}" class="ms-auto btn btn-sm btn-primary">
+        <i class="bi bi-pencil"></i> Modificar
+    </a>
+</div>
+
+<!-- Ultimas remesas -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-send-fill me-2"></i>Ultimas Remesas</h5>
+        <a href="{{ url_for('remesas.lista') }}" class="btn btn-sm btn-outline-light">Ver todas</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Beneficiario</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for remesa in ultimas_remesas %}
+                    <tr onclick="window.location='{{ url_for('remesas.detalle', id=remesa.id) }}'" style="cursor: pointer;">
+                        <td><strong>{{ remesa.codigo }}</strong></td>
+                        <td>{{ remesa.beneficiario_nombre }}</td>
+                        <td>${{ "%.2f"|format(remesa.monto_envio) }}</td>
+                        <td>
+                            <span class="badge badge-{{ remesa.estado }}">{{ remesa.estado|capitalize }}</span>
+                        </td>
+                        <td>{{ remesa.fecha_creacion.strftime('%d/%m %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2">No hay remesas aun</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

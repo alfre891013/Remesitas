@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-people"></i> Gestion de Usuarios</h4>
+    <a href="{{ url_for('admin.usuario_nuevo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Nuevo Usuario
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Nombre</th>
+                        <th>WhatsApp</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td><strong>{{ usuario.username }}</strong></td>
+                        <td>{{ usuario.nombre }}</td>
+                        <td>
+                            {% if usuario.telefono %}
+                            <span class="text-success"><i class="bi bi-whatsapp"></i> {{ usuario.telefono }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.rol == 'admin' %}
+                            <span class="badge bg-danger">Admin</span>
+                            {% else %}
+                            <span class="badge bg-info">Repartidor</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ usuario.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('admin.usuario_editar', id=usuario.id) }}" class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if usuario.id != current_user.id %}
+                                <form action="{{ url_for('admin.usuario_reset_password', id=usuario.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-info" title="Restablecer clave"
+                                            onclick="return confirm('Restablecer clave de {{ usuario.nombre }}? La nueva clave sera: 123456')">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                </form>
+                                {% if usuario.activo %}
+                                <form action="{{ url_for('admin.usuario_toggle', id=usuario.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-warning" title="Desactivar"
+                                            onclick="return confirm('Desactivar a {{ usuario.nombre }}?')">
+                                        <i class="bi bi-pause-circle"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form action="{{ url_for('admin.usuario_toggle', id=usuario.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-success" title="Activar">
+                                        <i class="bi bi-play-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <form action="{{ url_for('admin.usuario_eliminar', id=usuario.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar"
+                                            onclick="return confirm('ELIMINAR a {{ usuario.nombre }}? Esta accion no se puede deshacer.')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('admin.tasas') }}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-currency-exchange"></i> Tasas de Cambio
+    </a>
+    <a href="{{ url_for('admin.comisiones') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-percent"></i> Comisiones
+    </a>
+</div>
+{% endblock %}

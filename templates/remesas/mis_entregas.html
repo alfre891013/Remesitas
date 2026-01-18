@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Entregas - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-truck"></i> Mis Entregas Pendientes</h4>
+    <span class="badge bg-primary fs-5">{{ remesas|length }} pendientes</span>
+</div>
+
+{% if remesas %}
+<div class="row g-3">
+    {% for remesa in remesas %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center mb-2">
+                            <h5 class="mb-0 me-3">{{ remesa.codigo }}</h5>
+                            <span class="badge badge-{{ remesa.estado }}">{{ remesa.estado|capitalize }}</span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong><i class="bi bi-person-check"></i> {{ remesa.beneficiario_nombre }}</strong>
+                                </p>
+                                {% if remesa.beneficiario_telefono %}
+                                <p class="mb-1">
+                                    <i class="bi bi-telephone"></i>
+                                    <a href="tel:{{ remesa.beneficiario_telefono }}">{{ remesa.beneficiario_telefono }}</a>
+                                </p>
+                                {% endif %}
+                                {% if remesa.beneficiario_direccion %}
+                                <p class="mb-0 text-muted">
+                                    <i class="bi bi-geo-alt"></i> {{ remesa.beneficiario_direccion }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Entregar:</strong></p>
+                                <h4 class="text-primary mb-0">{{ "%.2f"|format(remesa.monto_entrega) }} LOCAL</h4>
+                                <small class="text-muted">({{ "%.2f"|format(remesa.monto_envio) }} USD)</small>
+                            </div>
+                        </div>
+
+                        {% if remesa.notas %}
+                        <div class="alert alert-warning mt-2 mb-0 py-2">
+                            <i class="bi bi-sticky"></i> {{ remesa.notas }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <form method="POST" action="{{ url_for('remesas.marcar_entregada', id=remesa.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-lg" onclick="return confirm('Confirmar entrega de {{ remesa.codigo }}?')">
+                                <i class="bi bi-check-circle"></i> Marcar Entregada
+                            </button>
+                        </form>
+                        <a href="{{ url_for('remesas.detalle', id=remesa.id) }}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+        <h4 class="mt-3">No tienes entregas pendientes</h4>
+        <p class="text-muted">Cuando te asignen remesas apareceran aqui</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

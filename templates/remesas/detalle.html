@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Remesa {{ remesa.codigo }} - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>
+        <i class="bi bi-receipt"></i> Remesa {{ remesa.codigo }}
+        <span class="badge badge-{{ remesa.estado }} ms-2">{{ remesa.estado|capitalize }}</span>
+    </h4>
+    <div>
+        {% if current_user.es_admin() %}
+        <a href="{{ url_for('remesas.editar', id=remesa.id) }}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        {% endif %}
+        {% if remesa.estado in ['pendiente', 'en_proceso'] %}
+        <form method="POST" action="{{ url_for('remesas.marcar_entregada', id=remesa.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-success" onclick="return confirm('Marcar como entregada?')">
+                <i class="bi bi-check-circle"></i> Marcar Entregada
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Remitente y Beneficiario -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person"></i> Remitente</h5>
+                    </div>
+                    <div class="card-body">
+                        <h5>{{ remesa.remitente_nombre }}</h5>
+                        {% if remesa.remitente_telefono %}
+                        <p class="mb-0">
+                            <i class="bi bi-telephone"></i>
+                            <a href="tel:{{ remesa.remitente_telefono }}">{{ remesa.remitente_telefono }}</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-person-check"></i> Beneficiario</h5>
+                    </div>
+                    <div class="card-body">
+                        <h5>{{ remesa.beneficiario_nombre }}</h5>
+                        {% if remesa.beneficiario_telefono %}
+                        <p class="mb-1">
+                            <i class="bi bi-telephone"></i>
+                            <a href="tel:{{ remesa.beneficiario_telefono }}">{{ remesa.beneficiario_telefono }}</a>
+                        </p>
+                        {% endif %}
+                        {% if remesa.beneficiario_direccion %}
+                        <p class="mb-0">
+                            <i class="bi bi-geo-alt"></i> {{ remesa.beneficiario_direccion }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones WhatsApp Manual -->
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-whatsapp"></i> Enviar WhatsApp</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% if remesa.beneficiario_telefono %}
+                    <div class="col-md-6">
+                        {% set msg_benef = '*REMESA EN CAMINO*
+
+Hola ' ~ remesa.beneficiario_nombre ~ ',
+
+Tienes una remesa pendiente.
+
+Codigo: ' ~ remesa.codigo ~ '
+Monto: ' ~ (remesa.monto_entrega|round|int)|string ~ ' ' ~ remesa.moneda_entrega ~ '
+Remitente: ' ~ remesa.remitente_nombre ~ '
+
+Nuestro repartidor te contactara pronto.
+
+Happy Remesitas' %}
+                        <a href="https://wa.me/{{ remesa.beneficiario_telefono|replace('+','')|replace(' ','') }}?text={{ msg_benef|urlencode }}"
+                           target="_blank" class="btn btn-outline-success w-100">
+                            <i class="bi bi-whatsapp"></i> Beneficiario (Cuba)
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if remesa.repartidor and remesa.repartidor.telefono %}
+                    <div class="col-md-6">
+                        {% set msg_rep = '*NUEVA ENTREGA*
+
+Codigo: ' ~ remesa.codigo ~ '
+Beneficiario: ' ~ remesa.beneficiario_nombre ~ '
+Tel: ' ~ (remesa.beneficiario_telefono or 'No disponible') ~ '
+Direccion: ' ~ (remesa.beneficiario_direccion or 'No especificada') ~ '
+
+Monto: ' ~ (remesa.monto_entrega|round|int)|string ~ ' ' ~ remesa.moneda_entrega %}
+                        <a href="https://wa.me/{{ remesa.repartidor.telefono|replace('+','')|replace(' ','') }}?text={{ msg_rep|urlencode }}"
+                           target="_blank" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-whatsapp"></i> Repartidor
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if remesa.estado == 'entregada' %}
+                <hr>
+                <div class="row g-2">
+                    {% if remesa.beneficiario_telefono %}
+                    <div class="col-md-6">
+                        {% set msg_entregada = '*REMESA ENTREGADA*
+
+Hola ' ~ remesa.beneficiario_nombre ~ ',
+
+Tu remesa ' ~ remesa.codigo ~ ' fue entregada exitosamente.
+
+Gracias por confiar en Happy Remesitas!' %}
+                        <a href="https://wa.me/{{ remesa.beneficiario_telefono|replace('+','')|replace(' ','') }}?text={{ msg_entregada|urlencode }}"
+                           target="_blank" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Confirmar al Beneficiario
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if remesa.remitente_telefono %}
+                    <div class="col-md-6">
+                        {% set msg_remitente = '*REMESA ENTREGADA*
+
+Hola ' ~ remesa.remitente_nombre ~ ',
+
+Tu remesa fue entregada exitosamente!
+
+Codigo: ' ~ remesa.codigo ~ '
+Beneficiario: ' ~ remesa.beneficiario_nombre ~ '
+Monto: ' ~ (remesa.monto_entrega|round|int)|string ~ ' ' ~ remesa.moneda_entrega ~ '
+
+Gracias por usar Happy Remesitas!' %}
+                        <a href="https://wa.me/{{ remesa.remitente_telefono|replace('+','')|replace(' ','') }}?text={{ msg_remitente|urlencode }}"
+                           target="_blank" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Confirmar al Remitente
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <small class="text-muted d-block mt-3">
+                    <i class="bi bi-info-circle"></i> Abre WhatsApp con el mensaje listo - solo dale enviar
+                </small>
+            </div>
+        </div>
+
+        <!-- Detalles -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Detalles</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="text-muted">Creada:</td>
+                                <td>{{ remesa.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            {% if remesa.fecha_entrega %}
+                            <tr>
+                                <td class="text-muted">Entregada:</td>
+                                <td>{{ remesa.fecha_entrega.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="text-muted">Repartidor:</td>
+                                <td>{{ remesa.repartidor.nombre if remesa.repartidor else 'Sin asignar' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="text-muted">Tipo entrega:</td>
+                                <td>
+                                    {% if remesa.tipo_entrega == 'USD' %}
+                                    <span class="badge bg-success">USD</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">MN (CUP)</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if remesa.tipo_entrega != 'USD' %}
+                            <tr>
+                                <td class="text-muted">Tasa aplicada:</td>
+                                <td>1 USD = {{ remesa.tasa_cambio }} CUP</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="text-muted">Creada por:</td>
+                                <td>{{ remesa.creador.nombre if remesa.creador else 'N/A' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% if remesa.notas %}
+                <div class="mt-3">
+                    <strong>Notas:</strong>
+                    <p class="mb-0">{{ remesa.notas }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen financiero -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Resumen Financiero</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert {% if remesa.tipo_entrega == 'USD' %}alert-success{% else %}alert-info{% endif %} py-2 mb-3">
+                    <i class="bi bi-info-circle"></i>
+                    {% if remesa.tipo_entrega == 'USD' %}
+                    Entrega en Dolares (USD)
+                    {% else %}
+                    Entrega en Moneda Nacional (CUP)
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Monto recibido:</span>
+                    <strong class="h5">${{ "%.2f"|format(remesa.monto_envio) }} USD</strong>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Beneficiario recibe:</span>
+                    <strong class="h5 text-primary">{{ "%.2f"|format(remesa.monto_entrega) }} {{ remesa.moneda_entrega or 'CUP' }}</strong>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between mb-2 text-muted">
+                    <span>Comision ({{ remesa.comision_porcentaje }}%):</span>
+                    <span>${{ "%.2f"|format(remesa.monto_envio * remesa.comision_porcentaje / 100) }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2 text-muted">
+                    <span>Comision fija:</span>
+                    <span>${{ "%.2f"|format(remesa.comision_fija) }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Total comision:</span>
+                    <strong>${{ "%.2f"|format(remesa.total_comision) }}</strong>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between h4 text-success">
+                    <span>TOTAL COBRADO:</span>
+                    <strong>${{ "%.2f"|format(remesa.total_cobrado) }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('remesas.lista') if current_user.es_admin() else url_for('remesas.mis_entregas') }}" class="btn btn-outline-secondary w-100 mt-3">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+{% endblock %}

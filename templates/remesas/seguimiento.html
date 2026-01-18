@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de Remesa - Remesitas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 25px;
+            text-align: center;
+        }
+        .estado-badge {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+        }
+        .whatsapp-card {
+            background: #dcf8c6;
+            border-left: 4px solid #25d366;
+        }
+        .whatsapp-btn {
+            background: #25d366;
+            border-color: #25d366;
+            color: white;
+        }
+        .whatsapp-btn:hover {
+            background: #128c7e;
+            border-color: #128c7e;
+            color: white;
+        }
+        .info-row {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="bi bi-search"></i> Seguimiento de Remesa</h3>
+                        <p class="mb-0 mt-2 opacity-75">Consulta el estado de tu envio</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Formulario de busqueda -->
+                        <form method="POST" class="mb-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Codigo de Remesa</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+                                    <input type="text" name="codigo" class="form-control"
+                                           placeholder="Ej: REM-XXXXXXXX"
+                                           value="{{ request.form.get('codigo', '') }}"
+                                           style="text-transform: uppercase;" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-search"></i> Buscar Remesa
+                            </button>
+                        </form>
+
+                        {% if error %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                        </div>
+                        {% endif %}
+
+                        {% if remesa %}
+                        <!-- Resultado de la busqueda -->
+                        <div class="border rounded p-3 mb-4">
+                            <div class="text-center mb-3">
+                                <h5 class="text-muted mb-2">{{ remesa.codigo }}</h5>
+                                {% if remesa.estado == 'pendiente' %}
+                                    <span class="badge bg-secondary estado-badge">
+                                        <i class="bi bi-clock"></i> Pendiente
+                                    </span>
+                                {% elif remesa.estado == 'en_proceso' %}
+                                    <span class="badge bg-warning text-dark estado-badge">
+                                        <i class="bi bi-truck"></i> En Proceso
+                                    </span>
+                                {% elif remesa.estado == 'entregada' %}
+                                    <span class="badge bg-success estado-badge">
+                                        <i class="bi bi-check-circle"></i> Entregada
+                                    </span>
+                                {% elif remesa.estado == 'cancelada' %}
+                                    <span class="badge bg-danger estado-badge">
+                                        <i class="bi bi-x-circle"></i> Cancelada
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="info-row d-flex justify-content-between">
+                                <span class="text-muted">Beneficiario:</span>
+                                <strong>{{ remesa.beneficiario_nombre }}</strong>
+                            </div>
+                            <div class="info-row d-flex justify-content-between">
+                                <span class="text-muted">Monto a recibir:</span>
+                                <strong class="text-success">{{ "%.2f"|format(remesa.monto_entrega) }} {{ remesa.moneda_entrega }}</strong>
+                            </div>
+                            <div class="info-row d-flex justify-content-between">
+                                <span class="text-muted">Remitente:</span>
+                                <span>{{ remesa.remitente_nombre }}</span>
+                            </div>
+                            <div class="info-row d-flex justify-content-between">
+                                <span class="text-muted">Fecha:</span>
+                                <span>{{ remesa.fecha_creacion.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                            {% if remesa.estado == 'entregada' and remesa.fecha_entrega %}
+                            <div class="info-row d-flex justify-content-between">
+                                <span class="text-muted">Entregada el:</span>
+                                <span>{{ remesa.fecha_entrega.strftime('%d/%m/%Y %H:%M') }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Instrucciones WhatsApp -->
+                        <div class="card whatsapp-card">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="bi bi-whatsapp"></i> Recibe notificaciones por WhatsApp</h6>
+                                <p class="small mb-3">Para recibir actualizaciones automaticas de tu remesa, activa las notificaciones:</p>
+                                <ol class="small mb-3">
+                                    <li>Abre WhatsApp</li>
+                                    <li>Envia un mensaje al numero:<br><strong>+1 415 523 8886</strong></li>
+                                    <li>Escribe: <code>join yard-soldier</code></li>
+                                </ol>
+                                <a href="https://wa.me/14155238886?text=join%20yard-soldier"
+                                   target="_blank" class="btn whatsapp-btn w-100">
+                                    <i class="bi bi-whatsapp"></i> Activar Notificaciones
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center text-muted py-3">
+                        <small>Remesitas &copy; 2024</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

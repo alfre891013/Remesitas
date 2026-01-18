@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2196f3">
+    <title>Panel Repartidor - Happy Remesitas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f5f5f5; font-family: -apple-system, sans-serif; }
+        .app-header { background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .app-container { max-width: 500px; margin: 0 auto; padding: 15px; padding-bottom: 80px; }
+        .section-title { font-size: 0.9rem; font-weight: 600; color: #666; margin: 20px 0 10px; text-transform: uppercase; }
+        .remesa-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .remesa-card h6 { margin: 0; font-weight: 600; }
+        .remesa-card .monto { font-size: 1.3rem; font-weight: 700; color: #2196f3; }
+        .btn-accion { border-radius: 10px; padding: 12px; font-weight: 600; width: 100%; margin-top: 10px; }
+        .btn-en-camino { background: #ff9800; border: none; color: white; }
+        .btn-entregar { background: #4caf50; border: none; color: white; }
+        .direccion { font-size: 0.85rem; color: #666; background: #f5f5f5; padding: 8px; border-radius: 8px; margin-top: 10px; }
+        .nav-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); display: flex; justify-content: space-around; }
+        .nav-bottom a { text-decoration: none; color: #666; text-align: center; font-size: 12px; }
+        .nav-bottom a.active { color: #2196f3; }
+        .nav-bottom i { font-size: 24px; display: block; }
+        .badge-count { background: #ff5722; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; margin-left: 5px; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state i { font-size: 48px; }
+        .foto-input { display: none; }
+        .foto-preview { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h5 class="mb-0"><i class="bi bi-truck"></i> {{ current_user.nombre }}</h5>
+        <small>Panel de Entregas</small>
+    </div>
+
+    <div class="app-container">
+        <!-- Saldos de Efectivo -->
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <div class="remesa-card text-center" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: white;">
+                    <small>Mi Saldo USD</small>
+                    <h4 class="mb-0">${{ "%.2f"|format(current_user.saldo_usd or 0) }}</h4>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="remesa-card text-center" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white;">
+                    <small>Mi Saldo CUP</small>
+                    <h4 class="mb-0">${{ "%.2f"|format(current_user.saldo_cup or 0) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pendientes -->
+        <div class="section-title">
+            <i class="bi bi-clock"></i> Pendientes
+            {% if pendientes %}<span class="badge-count">{{ pendientes|length }}</span>{% endif %}
+        </div>
+        {% if pendientes %}
+            {% for remesa in pendientes %}
+            <div class="remesa-card" id="remesa-{{ remesa.id }}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6>{{ remesa.beneficiario_nombre }}</h6>
+                        <small class="text-muted">{{ remesa.codigo }}</small>
+                    </div>
+                    <div class="monto">${{ "%.2f"|format(remesa.monto_entrega) }}</div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span><i class="bi bi-cash"></i> {{ remesa.moneda_entrega }}</span>
+                    <span><i class="bi bi-telephone"></i> {{ remesa.beneficiario_telefono or 'Sin tel' }}</span>
+                </div>
+                {% if remesa.beneficiario_direccion %}
+                <div class="direccion">
+                    <i class="bi bi-geo-alt"></i> {{ remesa.beneficiario_direccion }}
+                </div>
+                {% endif %}
+                <button class="btn btn-en-camino btn-accion" onclick="marcarEnCamino({{ remesa.id }})">
+                    <i class="bi bi-truck"></i> Marcar En Camino
+                </button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>Sin entregas pendientes</p>
+            </div>
+        {% endif %}
+
+        <!-- En Camino -->
+        <div class="section-title">
+            <i class="bi bi-truck"></i> En Camino
+            {% if en_camino %}<span class="badge-count">{{ en_camino|length }}</span>{% endif %}
+        </div>
+        {% if en_camino %}
+            {% for remesa in en_camino %}
+            <div class="remesa-card" id="remesa-{{ remesa.id }}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6>{{ remesa.beneficiario_nombre }}</h6>
+                        <small class="text-muted">{{ remesa.codigo }}</small>
+                    </div>
+                    <div class="monto">${{ "%.2f"|format(remesa.monto_entrega) }}</div>
+                </div>
+                {% if remesa.beneficiario_direccion %}
+                <div class="direccion">
+                    <i class="bi bi-geo-alt"></i> {{ remesa.beneficiario_direccion }}
+                </div>
+                {% endif %}
+
+                <form id="form-{{ remesa.id }}" enctype="multipart/form-data">
+                    <input type="file" id="foto-{{ remesa.id }}" class="foto-input" accept="image/*" capture="environment"
+                           onchange="previsualizarFoto({{ remesa.id }})">
+                    <img id="preview-{{ remesa.id }}" class="foto-preview">
+
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-accion flex-fill" onclick="document.getElementById('foto-{{ remesa.id }}').click()">
+                            <i class="bi bi-camera"></i> Foto
+                        </button>
+                        <button type="button" class="btn btn-entregar btn-accion flex-fill" onclick="marcarEntregada({{ remesa.id }})">
+                            <i class="bi bi-check-circle"></i> Entregada
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-truck"></i>
+                <p>Ninguna en camino</p>
+            </div>
+        {% endif %}
+
+        <!-- Entregadas Hoy -->
+        <div class="section-title">
+            <i class="bi bi-check-circle"></i> Entregadas Hoy
+            <span class="badge-count bg-success">{{ entregadas_hoy|length }}</span>
+        </div>
+        {% for remesa in entregadas_hoy %}
+        <div class="remesa-card" style="opacity: 0.7;">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6><i class="bi bi-check-circle text-success"></i> {{ remesa.beneficiario_nombre }}</h6>
+                    <small class="text-muted">{{ remesa.codigo }}</small>
+                </div>
+                <div class="text-success">${{ "%.2f"|format(remesa.monto_entrega) }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="nav-bottom">
+        <a href="/repartidor/panel" class="active"><i class="bi bi-house-fill"></i>Inicio</a>
+        <a href="/repartidor/historial"><i class="bi bi-clock-history"></i>Historial</a>
+        <a href="/logout"><i class="bi bi-box-arrow-right"></i>Salir</a>
+    </div>
+
+    <script>
+        function marcarEnCamino(id) {
+            if (!confirm('Marcar esta remesa en camino?')) return;
+
+            fetch('/repartidor/en-camino/' + id, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Error');
+                    }
+                });
+        }
+
+        function previsualizarFoto(id) {
+            const input = document.getElementById('foto-' + id);
+            const preview = document.getElementById('preview-' + id);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function marcarEntregada(id) {
+            if (!confirm('Confirmar entrega?')) return;
+
+            const form = document.getElementById('form-' + id);
+            const formData = new FormData();
+            const fotoInput = document.getElementById('foto-' + id);
+            if (fotoInput.files[0]) {
+                formData.append('foto', fotoInput.files[0]);
+            }
+
+            fetch('/repartidor/entregar/' + id, {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

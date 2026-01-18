@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Balance - Reportes - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-graph-up"></i> Balance General</h4>
+</div>
+
+<!-- Filtro de fechas -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" class="form-control" value="{{ fecha_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha Fin</label>
+                <input type="date" name="fecha_fin" class="form-control" value="{{ fecha_fin }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-4">
+        <div class="card stat-card primary h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Remesas</h6>
+                <h3 class="mb-0">{{ total_remesas }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Enviado</h6>
+                <h3 class="mb-0">${{ "%.2f"|format(total_enviado) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card stat-card danger h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Cobrado</h6>
+                <h3 class="mb-0">${{ "%.2f"|format(total_cobrado) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remesas por estado -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Por Estado</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span><span class="badge badge-pendiente">Pendiente</span></span>
+                    <strong>{{ por_estado.get('pendiente', 0) }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span><span class="badge badge-en_proceso">En Proceso</span></span>
+                    <strong>{{ por_estado.get('en_proceso', 0) }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span><span class="badge badge-entregada">Entregada</span></span>
+                    <strong>{{ por_estado.get('entregada', 0) }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span><span class="badge badge-cancelada">Cancelada</span></span>
+                    <strong>{{ por_estado.get('cancelada', 0) }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar3"></i> Por Dia</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Cantidad</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dia in por_dia %}
+                            <tr>
+                                <td>{{ dia.fecha }}</td>
+                                <td>{{ dia.cantidad }}</td>
+                                <td>${{ "%.2f"|format(dia.monto or 0) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Sin datos</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Links a otros reportes -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('reportes.por_repartidor', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline-primary">
+        <i class="bi bi-people"></i> Por Repartidor
+    </a>
+    <a href="{{ url_for('reportes.ingresos', fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline-primary">
+        <i class="bi bi-cash"></i> Ingresos
+    </a>
+</div>
+{% endblock %}

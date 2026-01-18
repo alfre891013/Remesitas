@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Remesa - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-plus-circle"></i> Nueva Remesa</h4>
+    {% if remesa_base %}
+    <span class="badge bg-info">Basada en {{ remesa_base.codigo }}</span>
+    {% endif %}
+</div>
+
+<form method="POST" id="formRemesa">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Datos del remitente -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Datos del Remitente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <div class="input-group position-relative">
+                                <input type="text" name="remitente_nombre" id="remitente_nombre" class="form-control"
+                                       value="{{ remesa_base.remitente_nombre if remesa_base else '' }}"
+                                       autocomplete="off" required placeholder="Escribe para buscar...">
+                                <button type="button" class="btn btn-outline-secondary" id="btn_remitentes" title="Ver remitentes anteriores">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                </button>
+                                <div id="sugerencias_remitente" class="autocomplete-dropdown"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" name="remitente_telefono" id="remitente_telefono" class="form-control"
+                                   value="{{ remesa_base.remitente_telefono if remesa_base else '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos del beneficiario -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-check"></i> Datos del Beneficiario</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <div class="input-group position-relative">
+                                <input type="text" name="beneficiario_nombre" id="beneficiario_nombre" class="form-control"
+                                       value="{{ remesa_base.beneficiario_nombre if remesa_base else '' }}"
+                                       autocomplete="off" required placeholder="Escribe para buscar...">
+                                <button type="button" class="btn btn-outline-secondary" id="btn_beneficiarios" title="Ver beneficiarios anteriores">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                </button>
+                                <div id="sugerencias_beneficiario" class="autocomplete-dropdown"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" name="beneficiario_telefono" id="beneficiario_telefono" class="form-control"
+                                   value="{{ remesa_base.beneficiario_telefono if remesa_base else '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Direccion de entrega</label>
+                            <textarea name="beneficiario_direccion" id="beneficiario_direccion" class="form-control" rows="2">{{ remesa_base.beneficiario_direccion if remesa_base else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monto y Tipo de Entrega -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-cash"></i> Monto y Tipo de Entrega</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Tipo de Entrega *</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="tipo_entrega" id="tipo_mn" value="MN"
+                                       {% if not remesa_base or remesa_base.tipo_entrega == 'MN' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary" for="tipo_mn">
+                                    <i class="bi bi-currency-exchange"></i> Entregar en MN (CUP) - Sin comision
+                                </label>
+                                <input type="radio" class="btn-check" name="tipo_entrega" id="tipo_usd" value="USD"
+                                       {% if remesa_base and remesa_base.tipo_entrega == 'USD' %}checked{% endif %}>
+                                <label class="btn btn-outline-success" for="tipo_usd">
+                                    <i class="bi bi-currency-dollar"></i> Entregar en USD - 5% comision
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Monto a recibir (USD) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="monto_envio" id="monto_envio" class="form-control"
+                                       step="0.01" min="1" value="{{ remesa_base.monto_envio if remesa_base else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4" id="campo_tasa_entrega">
+                            <label class="form-label">Tasa de entrega *</label>
+                            <div class="input-group">
+                                <input type="number" name="tasa_entrega" id="tasa_entrega" class="form-control" step="0.01" min="1" value="{{ tasa_actual }}">
+                                <span class="input-group-text">CUP</span>
+                            </div>
+                            <small class="text-muted">Mercado: {{ tasa_actual }}</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Repartidor *</label>
+                            <select name="repartidor_id" class="form-select" required>
+                                <option value="">Seleccionar repartidor</option>
+                                {% for r in repartidores %}
+                                <option value="{{ r.id }}" {% if remesa_base and remesa_base.repartidor_id == r.id %}selected{% endif %}>
+                                    {{ r.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notas</label>
+                            <textarea name="notas" class="form-control" rows="2" placeholder="Instrucciones especiales...">{{ remesa_base.notas if remesa_base else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-calculator"></i> Resumen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info py-2 mb-3" id="tipo_info">
+                        <i class="bi bi-info-circle"></i> <span id="tipo_texto">Entrega en Moneda Nacional (CUP) - Sin comision</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Monto recibido:</span>
+                        <strong>$<span id="resumen_monto">0.00</span> USD</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2" id="info_tasas">
+                        <span>Tasa entrega:</span>
+                        <span><span id="resumen_tasa_entrega">{{ tasa_actual }}</span> CUP <small class="text-muted">(Mercado: {{ tasa_actual }})</small></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Beneficiario recibe:</span>
+                        <strong class="text-primary h5"><span id="resumen_entrega">0.00</span> <span id="moneda_entrega">CUP</span></strong>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2 text-muted" id="comision_pct_row">
+                        <span id="comision_pct_label">Comision (0%):</span>
+                        <span>$<span id="resumen_comision_pct">0.00</span></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total comision:</span>
+                        <strong>$<span id="resumen_comision">0.00</span></strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2 text-warning" id="ganancia_tasa_row">
+                        <span>Ganancia por tasa:</span>
+                        <strong><span id="resumen_ganancia_tasa">0</span> CUP</strong>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between h4 text-success">
+                        <span>TOTAL A COBRAR:</span>
+                        <strong>$<span id="resumen_total">0.00</span></strong>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-check-lg"></i> Crear Remesa
+                    </button>
+                    <a href="{{ url_for('remesas.lista') }}" class="btn btn-outline-secondary w-100 mt-2">
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #0d6efd;
+    border-radius: 0 0 8px 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1060;
+    display: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    margin-top: 2px;
+}
+.autocomplete-dropdown.show {
+    display: block;
+}
+.autocomplete-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background 0.15s;
+}
+.autocomplete-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 8px 8px;
+}
+.autocomplete-item:hover {
+    background: #e7f1ff;
+}
+.autocomplete-item small {
+    color: #6c757d;
+    font-size: 0.85em;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const tasaMercado = {{ tasa_actual }};
+
+// ========== AUTOCOMPLETAR ==========
+
+let timeoutRemitente = null;
+let timeoutBeneficiario = null;
+
+// Remitente
+document.getElementById('remitente_nombre').addEventListener('input', function() {
+    clearTimeout(timeoutRemitente);
+    const q = this.value.trim();
+    const dropdown = document.getElementById('sugerencias_remitente');
+
+    if (q.length < 2) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    timeoutRemitente = setTimeout(() => {
+        fetch('/api/buscar-remitentes?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+                dropdown.innerHTML = data.map(item =>
+                    `<div class="autocomplete-item" data-nombre="${item.nombre}" data-telefono="${item.telefono}">
+                        <strong>${item.nombre}</strong><br>
+                        <small>${item.telefono || 'Sin telefono'}</small>
+                    </div>`
+                ).join('');
+                dropdown.classList.add('show');
+
+                dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        document.getElementById('remitente_nombre').value = this.dataset.nombre;
+                        document.getElementById('remitente_telefono').value = this.dataset.telefono;
+                        dropdown.classList.remove('show');
+                    });
+                });
+            });
+    }, 300);
+});
+
+// Beneficiario
+document.getElementById('beneficiario_nombre').addEventListener('input', function() {
+    clearTimeout(timeoutBeneficiario);
+    const q = this.value.trim();
+    const dropdown = document.getElementById('sugerencias_beneficiario');
+
+    if (q.length < 2) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    timeoutBeneficiario = setTimeout(() => {
+        fetch('/api/buscar-beneficiarios?q=' + encodeURIComponent(q))
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+                dropdown.innerHTML = data.map(item =>
+                    `<div class="autocomplete-item" data-nombre="${item.nombre}" data-telefono="${item.telefono}" data-direccion="${item.direccion}">
+                        <strong>${item.nombre}</strong><br>
+                        <small>${item.telefono || 'Sin telefono'} - ${item.direccion || 'Sin direccion'}</small>
+                    </div>`
+                ).join('');
+                dropdown.classList.add('show');
+
+                dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        document.getElementById('beneficiario_nombre').value = this.dataset.nombre;
+                        document.getElementById('beneficiario_telefono').value = this.dataset.telefono;
+                        document.getElementById('beneficiario_direccion').value = this.dataset.direccion;
+                        dropdown.classList.remove('show');
+                    });
+                });
+            });
+    }, 300);
+});
+
+// Cerrar dropdowns al hacer clic fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#remitente_nombre') && !e.target.closest('#sugerencias_remitente') && !e.target.closest('#btn_remitentes')) {
+        document.getElementById('sugerencias_remitente').classList.remove('show');
+    }
+    if (!e.target.closest('#beneficiario_nombre') && !e.target.closest('#sugerencias_beneficiario') && !e.target.closest('#btn_beneficiarios')) {
+        document.getElementById('sugerencias_beneficiario').classList.remove('show');
+    }
+});
+
+// ========== BOTONES DESPLEGABLES ==========
+
+// Boton para listar todos los remitentes
+document.getElementById('btn_remitentes').addEventListener('click', function() {
+    const dropdown = document.getElementById('sugerencias_remitente');
+
+    if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    fetch('/api/listar-remitentes')
+        .then(r => r.json())
+        .then(data => {
+            if (data.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item text-muted">No hay remitentes anteriores</div>';
+            } else {
+                dropdown.innerHTML = data.map(item =>
+                    `<div class="autocomplete-item" data-nombre="${item.nombre}" data-telefono="${item.telefono}">
+                        <strong>${item.nombre}</strong><br>
+                        <small>${item.telefono || 'Sin telefono'}</small>
+                    </div>`
+                ).join('');
+
+                dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        document.getElementById('remitente_nombre').value = this.dataset.nombre;
+                        document.getElementById('remitente_telefono').value = this.dataset.telefono;
+                        dropdown.classList.remove('show');
+                    });
+                });
+            }
+            dropdown.classList.add('show');
+        });
+});
+
+// Boton para listar todos los beneficiarios
+document.getElementById('btn_beneficiarios').addEventListener('click', function() {
+    const dropdown = document.getElementById('sugerencias_beneficiario');
+
+    if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    fetch('/api/listar-beneficiarios')
+        .then(r => r.json())
+        .then(data => {
+            if (data.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-item text-muted">No hay beneficiarios anteriores</div>';
+            } else {
+                dropdown.innerHTML = data.map(item =>
+                    `<div class="autocomplete-item" data-nombre="${item.nombre}" data-telefono="${item.telefono}" data-direccion="${item.direccion}">
+                        <strong>${item.nombre}</strong><br>
+                        <small>${item.telefono || 'Sin telefono'} - ${item.direccion || 'Sin direccion'}</small>
+                    </div>`
+                ).join('');
+
+                dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        document.getElementById('beneficiario_nombre').value = this.dataset.nombre;
+                        document.getElementById('beneficiario_telefono').value = this.dataset.telefono;
+                        document.getElementById('beneficiario_direccion').value = this.dataset.direccion;
+                        dropdown.classList.remove('show');
+                    });
+                });
+            }
+            dropdown.classList.add('show');
+        });
+});
+
+// ========== CALCULADORA ==========
+
+function calcularResumen() {
+    const monto = parseFloat(document.getElementById('monto_envio').value) || 0;
+    const tipoEntrega = document.querySelector('input[name="tipo_entrega"]:checked').value;
+    const tasaEntrega = parseFloat(document.getElementById('tasa_entrega').value) || tasaMercado;
+
+    let montoEntrega, monedaEntrega, gananciaTasa, comisionPct, comisionPorcentaje, totalComision;
+
+    if (tipoEntrega === 'USD') {
+        comisionPct = 5.0;
+        comisionPorcentaje = monto * (comisionPct / 100);
+        totalComision = comisionPorcentaje;
+
+        montoEntrega = monto;
+        monedaEntrega = 'USD';
+        gananciaTasa = 0;
+
+        document.getElementById('campo_tasa_entrega').style.display = 'none';
+        document.getElementById('info_tasas').style.display = 'none';
+        document.getElementById('ganancia_tasa_row').style.display = 'none';
+        document.getElementById('tipo_texto').textContent = 'Entrega en Dolares (USD) - 5% comision';
+        document.getElementById('tipo_info').className = 'alert alert-success py-2 mb-3';
+        document.getElementById('comision_pct_label').textContent = 'Comision (5%):';
+    } else {
+        comisionPct = 0.0;
+        comisionPorcentaje = 0;
+        totalComision = 0;
+
+        montoEntrega = monto * tasaEntrega;
+        monedaEntrega = 'CUP';
+        gananciaTasa = monto * (tasaMercado - tasaEntrega);
+
+        document.getElementById('campo_tasa_entrega').style.display = 'block';
+        document.getElementById('info_tasas').style.display = 'flex';
+        document.getElementById('ganancia_tasa_row').style.display = 'flex';
+        document.getElementById('tipo_texto').textContent = 'Entrega en Moneda Nacional (CUP) - Sin comision';
+        document.getElementById('tipo_info').className = 'alert alert-info py-2 mb-3';
+        document.getElementById('resumen_tasa_entrega').textContent = tasaEntrega;
+        document.getElementById('comision_pct_label').textContent = 'Comision (0%):';
+    }
+
+    const totalCobrar = monto + totalComision;
+
+    document.getElementById('resumen_monto').textContent = monto.toFixed(2);
+    document.getElementById('resumen_entrega').textContent = montoEntrega.toFixed(2);
+    document.getElementById('moneda_entrega').textContent = monedaEntrega;
+    document.getElementById('resumen_comision_pct').textContent = comisionPorcentaje.toFixed(2);
+    document.getElementById('resumen_comision').textContent = totalComision.toFixed(2);
+    document.getElementById('resumen_ganancia_tasa').textContent = gananciaTasa.toFixed(0);
+    document.getElementById('resumen_total').textContent = totalCobrar.toFixed(2);
+
+    const gananciaRow = document.getElementById('ganancia_tasa_row');
+    if (gananciaTasa > 0) {
+        gananciaRow.className = 'd-flex justify-content-between mb-2 text-success';
+    } else if (gananciaTasa < 0) {
+        gananciaRow.className = 'd-flex justify-content-between mb-2 text-danger';
+    } else {
+        gananciaRow.className = 'd-flex justify-content-between mb-2 text-muted';
+    }
+}
+
+document.getElementById('monto_envio').addEventListener('input', calcularResumen);
+document.getElementById('tasa_entrega').addEventListener('input', calcularResumen);
+document.querySelectorAll('input[name="tipo_entrega"]').forEach(function(radio) {
+    radio.addEventListener('change', calcularResumen);
+});
+
+// Inicializar
+calcularResumen();
+</script>
+{% endblock %}

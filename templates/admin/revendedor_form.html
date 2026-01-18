@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if revendedor else 'Nuevo' }} Revendedor - Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shop"></i>
+                        {{ 'Editar Revendedor' if revendedor else 'Nuevo Revendedor' }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" name="nombre" class="form-control"
+                                   value="{{ revendedor.nombre if revendedor else '' }}" required>
+                        </div>
+
+                        {% if not revendedor %}
+                        <div class="mb-3">
+                            <label class="form-label">Usuario *</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Telefono</label>
+                            <input type="tel" name="telefono" class="form-control"
+                                   value="{{ revendedor.telefono if revendedor else '' }}"
+                                   placeholder="+1...">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Revendedor</label>
+                            <select name="usa_logistica" class="form-select">
+                                <option value="1" {{ 'selected' if (not revendedor) or revendedor.usa_logistica else '' }}>
+                                    Usa logistica Happy Remesitas (paga monto + comision)
+                                </option>
+                                <option value="0" {{ 'selected' if revendedor and not revendedor.usa_logistica else '' }}>
+                                    Solo plataforma (paga solo comision)
+                                </option>
+                            </select>
+                            <small class="text-muted">Si usa tu logistica, te paga el monto + comision. Si solo usa la plataforma, solo paga la comision.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Comision de Plataforma (%)</label>
+                            <div class="input-group">
+                                <input type="number" name="comision" class="form-control"
+                                       value="{{ revendedor.comision_revendedor if revendedor else 2.0 }}"
+                                       min="0" max="100" step="0.1">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="text-muted">Porcentaje que Happy Remesitas cobra al revendedor por cada remesa</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ 'Nueva Contrasena' if revendedor else 'Contrasena *' }}
+                            </label>
+                            <input type="password" name="password" class="form-control"
+                                   {{ '' if revendedor else 'required' }}>
+                            {% if revendedor %}
+                            <small class="text-muted">Dejar en blanco para mantener la actual</small>
+                            {% endif %}
+                        </div>
+
+                        {% if revendedor %}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="activo" class="form-check-input"
+                                       {{ 'checked' if revendedor.activo else '' }}>
+                                <label class="form-check-label">Activo</label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Saldo pendiente:</strong> ${{ "%.2f"|format(revendedor.saldo_pendiente) }}
+                            <br>
+                            <a href="{{ url_for('admin.revendedor_balance', id=revendedor.id) }}">Ver historial de pagos</a>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Guardar
+                            </button>
+                            <a href="{{ url_for('admin.revendedores') }}" class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

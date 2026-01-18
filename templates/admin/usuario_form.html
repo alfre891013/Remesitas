@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if usuario else 'Nuevo' }} Usuario - Remesitas{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-{{ 'gear' if usuario else 'plus' }}"></i>
+                    {{ 'Editar' if usuario else 'Nuevo' }} Usuario
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de Usuario *</label>
+                        <input type="text" name="username" class="form-control"
+                               value="{{ usuario.username if usuario else '' }}"
+                               {{ 'readonly' if usuario else 'required' }}>
+                        {% if usuario %}
+                        <small class="text-muted">El nombre de usuario no se puede cambiar</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre Completo *</label>
+                        <input type="text" name="nombre" class="form-control"
+                               value="{{ usuario.nombre if usuario else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ 'Nueva Contrasena' if usuario else 'Contrasena *' }}</label>
+                        <input type="password" name="password" class="form-control"
+                               {{ '' if usuario else 'required' }} minlength="4">
+                        {% if usuario %}
+                        <small class="text-muted">Dejar vacio para mantener la actual</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Rol *</label>
+                        <select name="rol" class="form-select" required>
+                            <option value="repartidor" {% if usuario and usuario.rol == 'repartidor' %}selected{% endif %}>
+                                Repartidor
+                            </option>
+                            <option value="admin" {% if usuario and usuario.rol == 'admin' %}selected{% endif %}>
+                                Administrador
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Telefono WhatsApp</label>
+                        <input type="text" name="telefono" class="form-control"
+                               value="{{ usuario.telefono if usuario and usuario.telefono else '' }}"
+                               placeholder="+5355555555">
+                        <small class="text-muted">Incluir codigo de pais (ej: +53 para Cuba). Para notificaciones de remesas.</small>
+                    </div>
+
+                    {% if usuario %}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="activo" class="form-check-input" id="activo"
+                                   {{ 'checked' if usuario.activo else '' }}>
+                            <label class="form-check-label" for="activo">Usuario activo</label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> {{ 'Guardar Cambios' if usuario else 'Crear Usuario' }}
+                        </button>
+                        <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

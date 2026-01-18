@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitud {{ solicitud.codigo }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-alt"></i> Solicitud {{ solicitud.codigo }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.solicitud_aprobar', id=solicitud.id) }}">
+                        <!-- Datos del Remitente -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h5><i class="fas fa-user"></i> Remitente</h5>
+                                <p class="mb-1"><strong>{{ solicitud.remitente_nombre }}</strong></p>
+                                <p class="mb-0 text-muted">{{ solicitud.remitente_telefono or 'Sin telefono' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Datos del Beneficiario -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h5><i class="fas fa-user-check"></i> Beneficiario</h5>
+                                <p class="mb-1"><strong>{{ solicitud.beneficiario_nombre }}</strong></p>
+                                <p class="mb-1 text-muted">{{ solicitud.beneficiario_telefono or 'Sin telefono' }}</p>
+                                <div class="mb-3">
+                                    <label class="form-label">Direccion de entrega</label>
+                                    <textarea name="beneficiario_direccion" class="form-control" rows="2">{{ solicitud.beneficiario_direccion or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Montos (Editables) -->
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Monto a Enviar (USD)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="monto_envio" class="form-control"
+                                           value="{{ solicitud.monto_envio }}" step="0.01" id="montoEnvio">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Monto a Entregar ({{ solicitud.moneda_entrega }})</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{% if solicitud.moneda_entrega == 'USD' %}${% endif %}</span>
+                                    <input type="number" name="monto_entrega" class="form-control"
+                                           value="{{ solicitud.monto_entrega|round(2) }}" step="0.01" id="montoEntrega">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-3">
+                            <small>
+                                <strong>Tipo:</strong> {{ solicitud.tipo_entrega }}<br>
+                                {% if solicitud.tipo_entrega == 'USD' %}
+                                    <strong>Comision:</strong> 5%
+                                {% else %}
+                                    <strong>Tasa actual:</strong> {{ tasa_actual }} CUP (se descuentan 15 CUP)
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <!-- Asignar Repartidor -->
+                        <div class="mb-3">
+                            <label class="form-label">Asignar Repartidor (opcional)</label>
+                            <select name="repartidor_id" class="form-select">
+                                <option value="">-- Sin asignar --</option>
+                                {% for r in repartidores %}
+                                <option value="{{ r.id }}">{{ r.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Botones de Accion -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> Aprobar Solicitud
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <!-- Rechazar -->
+                    <form method="POST" action="{{ url_for('admin.solicitud_rechazar', id=solicitud.id) }}"
+                          onsubmit="return confirm('Estas seguro de rechazar esta solicitud?')">
+                        <div class="mb-3">
+                            <label class="form-label text-danger">Motivo de rechazo</label>
+                            <input type="text" name="motivo" class="form-control" placeholder="Ej: Monto no disponible">
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-times"></i> Rechazar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="{{ url_for('admin.solicitudes') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a Solicitudes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Recalcular monto de entrega cuando cambia el monto de envio
+document.getElementById('montoEnvio').addEventListener('input', function() {
+    const monto = parseFloat(this.value) || 0;
+    const tipoEntrega = '{{ solicitud.tipo_entrega }}';
+    const tasa = {{ tasa_actual }};
+
+    let entrega;
+    if (tipoEntrega === 'USD') {
+        entrega = monto * 0.95;  // 5% comision
+    } else {
+        entrega = monto * (tasa - 15);  // tasa - 15 CUP
+    }
+
+    document.getElementById('montoEntrega').value = entrega.toFixed(2);
+});
+</script>
+{% endblock %}

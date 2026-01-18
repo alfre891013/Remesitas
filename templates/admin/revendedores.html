@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Revendedores - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-shop"></i> Revendedores</h4>
+        <a href="{{ url_for('admin.revendedor_nuevo') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nuevo Revendedor
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Usuario</th>
+                        <th>Telefono</th>
+                        <th>Comision</th>
+                        <th>Remesas</th>
+                        <th>Total Enviado</th>
+                        <th>Saldo Pendiente</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in revendedores %}
+                    <tr>
+                        <td><strong>{{ r.nombre }}</strong></td>
+                        <td>{{ r.username }}</td>
+                        <td>{{ r.telefono or '-' }}</td>
+                        <td>{{ r.comision_revendedor }}%</td>
+                        <td>{{ stats[r.id].total_remesas }}</td>
+                        <td>${{ "%.2f"|format(stats[r.id].total_enviado) }}</td>
+                        <td>
+                            {% if r.saldo_pendiente > 0 %}
+                            <span class="text-danger"><strong>${{ "%.2f"|format(r.saldo_pendiente) }}</strong></span>
+                            {% else %}
+                            <span class="text-success">$0.00</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if r.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('admin.revendedor_balance', id=r.id) }}"
+                                   class="btn btn-outline-success" title="Balance">
+                                    <i class="bi bi-wallet2"></i>
+                                </a>
+                                <a href="{{ url_for('admin.revendedor_editar', id=r.id) }}"
+                                   class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ url_for('admin.revendedor_reset_password', id=r.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-info" title="Restablecer clave"
+                                            onclick="return confirm('Restablecer clave de {{ r.nombre }}? La nueva clave sera: 123456')">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                </form>
+                                {% if r.activo %}
+                                <form action="{{ url_for('admin.revendedor_toggle', id=r.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-warning" title="Desactivar"
+                                            onclick="return confirm('Desactivar a {{ r.nombre }}?')">
+                                        <i class="bi bi-pause-circle"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form action="{{ url_for('admin.revendedor_toggle', id=r.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-success" title="Activar">
+                                        <i class="bi bi-play-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <form action="{{ url_for('admin.revendedor_eliminar', id=r.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger" title="Eliminar"
+                                            onclick="return confirm('ELIMINAR a {{ r.nombre }}? Esta accion no se puede deshacer.')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            No hay revendedores registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    {% if revendedores %}
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h6>Total Revendedores</h6>
+                    <h2>{{ revendedores|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6>Total Enviado (USD)</h6>
+                    <h2>${{ "%.2f"|format(stats.values()|map(attribute='total_enviado')|sum) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h6>Saldos Pendientes</h6>
+                    <h2>${{ "%.2f"|format(revendedores|map(attribute='saldo_pendiente')|sum) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

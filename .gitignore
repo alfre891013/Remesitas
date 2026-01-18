@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# Instance folder
+instance/
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temp files
+*.pem
+vapid_keys.txt
+cookies.txt
+tmpclaude-*
+*.zip
+
+# Claude
+.claude/
+
+# Test files
+test_*.py
+fix_*.py
+generar_*.py
+crear_*.py
+eliminar_*.py
+limpiar_*.py
+migrar_*.py
+update_*.py
+ver_*.py
+verificar_*.py
+
+# Windows
+*.cmd

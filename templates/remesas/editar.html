@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Remesa {{ remesa.codigo }} - Remesitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-pencil"></i> Editar Remesa {{ remesa.codigo }}</h4>
+</div>
+
+<form method="POST">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Datos del remitente -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Datos del Remitente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" name="remitente_nombre" class="form-control" value="{{ remesa.remitente_nombre }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" name="remitente_telefono" class="form-control" value="{{ remesa.remitente_telefono or '' }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos del beneficiario -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-check"></i> Datos del Beneficiario</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" name="beneficiario_nombre" class="form-control" value="{{ remesa.beneficiario_nombre }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Telefono</label>
+                            <input type="text" name="beneficiario_telefono" class="form-control" value="{{ remesa.beneficiario_telefono or '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Direccion de entrega</label>
+                            <textarea name="beneficiario_direccion" class="form-control" rows="2">{{ remesa.beneficiario_direccion or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado y asignacion -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Estado y Asignacion</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="pendiente" {% if remesa.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                                <option value="en_proceso" {% if remesa.estado == 'en_proceso' %}selected{% endif %}>En proceso</option>
+                                <option value="entregada" {% if remesa.estado == 'entregada' %}selected{% endif %}>Entregada</option>
+                                <option value="cancelada" {% if remesa.estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Repartidor</label>
+                            <select name="repartidor_id" class="form-select">
+                                <option value="">Sin asignar</option>
+                                {% for r in repartidores %}
+                                <option value="{{ r.id }}" {% if remesa.repartidor_id == r.id %}selected{% endif %}>
+                                    {{ r.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notas</label>
+                            <textarea name="notas" class="form-control" rows="2">{{ remesa.notas or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informacion (Solo lectura)</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Monto:</strong> ${{ "%.2f"|format(remesa.monto_envio) }} USD</p>
+                    <p><strong>Entrega:</strong> {{ "%.2f"|format(remesa.monto_entrega) }} LOCAL</p>
+                    <p><strong>Tasa:</strong> {{ remesa.tasa_cambio }}</p>
+                    <p><strong>Comision:</strong> ${{ "%.2f"|format(remesa.total_comision) }}</p>
+                    <p><strong>Total cobrado:</strong> ${{ "%.2f"|format(remesa.total_cobrado) }}</p>
+                    <hr>
+                    <p class="text-muted mb-0">Los montos no se pueden modificar despues de crear la remesa.</p>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                </button>
+                <a href="{{ url_for('remesas.detalle', id=remesa.id) }}" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
