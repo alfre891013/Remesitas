@@ -85,12 +85,6 @@ def enviar_push(suscripcion, titulo, mensaje, url=None, icono=None):
     Returns:
         dict con 'exito' (bool) y 'mensaje' o 'error'
     """
-    try:
-        from pywebpush import webpush
-    except ImportError:
-        logger.error("pywebpush no esta instalado")
-        return {'exito': False, 'error': 'pywebpush no disponible'}
-
     vapid_pem_path = _get_vapid_pem_path()
     vapid_email = current_app.config.get('VAPID_EMAIL', 'admin@example.com')
 
